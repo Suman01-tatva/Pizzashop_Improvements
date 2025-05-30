@@ -1,0 +1,175 @@
+@model PizzaShop.Entity.ViewModels.AssignTablePageViewModel;
+
+<!-- Assign Waiting Token Modal -->
+<div class="modal fade" id="assignWtModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Assign Table</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-1">
+                <form id="assignTableForm" method="post">
+                    <input type="number" asp-for="Id" id="wtId" hidden>
+                    <input asp-for="CustomerEmail" type="text" id="assignEmail" hidden />
+                    <input asp-for="CustomerId" type="text" id="assignId" hidden />
+                    <input asp-for="CustomerName" type="text" id="assignName" hidden />
+                    <input asp-for="MobileNumber" type="text" id="assignPhone" hidden />
+                    <input asp-for="NoOfPerson" type="number" id="assignNoOfPerson" hidden>
+                    <div class="row">
+                        <div class="col-12 col-md-6">
+                            <div class="form-floating">
+                                <select class="form-select" asp-for="SectionId"
+                                    aria-label="Floating label select example" id="sectionList">
+                                    <option selected disabled hidden>Select Section</option>
+                                    @foreach (var s in @Model.SectionList!)
+                                    {
+                                        <option value="@s.Id">@s.Name</option>
+                                    }
+                                </select>
+                                <label for="Section">Section*</label>
+                                <span class="text-danger ms-1"></span>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="form-floating">
+                                <select class="form-select" aria-label="Floating label select example"
+                                    id="tableDropdown">
+                                    <option value="" selected>Select Table</option>
+                                </select>
+                                <label for="Tables">Tables*</label>
+                                <span class="text-danger ms-1"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end border-0">
+                        <button type="submit" class="fill-btn me-2" id="assignTableBtn" disabled>Assign</button>
+                        <button type="button" class="outline-btn me-2" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        var sectionId = @Model.SectionId;
+        loadTables();
+        $("#sectionList").change(function () {
+            sectionId = $(this).val();
+            tableIdList = [];
+            tableDetailList = [];
+            loadTables();
+        })
+
+        function loadTables() {
+            $.ajax({
+                url: '@Url.Action("GetTables", "OrderAppWaitingList")',
+                type: 'GET',
+                data: { id: sectionId },
+                success: function (response) {
+                    $("#tableDropdown").empty();
+                    if (response.tables.length == 0)
+                        $("#tableDropdown").append('<option value="" selected hidden>No Table</option>');
+                    else
+                        $("#tableDropdown").append('<option value="" selected hidden>Select Table</option>');
+                    for (let i = 0; i < response.tables.length; i++) {
+                        var table = response.tables[i];
+                        $("#tableDropdown").append(`<option value="${table.Id}" data-capacity=${table.Capacity} data-name=${table.Name}>${table.Name}</option>`);
+                    }
+                    $("#tableDropdown").val('');
+                },
+                error: function (error) {
+                    toastr.error(error.message);
+                }
+            })
+        }
+    })
+
+    var tableIdList = [];
+    var tableDetailList = [];
+    $("#tableDropdown").change(function () {
+        var selectedTable = $(this).find(':selected');
+        var capacity = selectedTable.data('capacity');
+        var name = selectedTable.data('name');
+        if ($(this).val() == '') {
+            return;
+        }
+        if ($(this).val() != null && tableIdList.includes(parseInt($(this).val()))) {
+
+            tableIdList = tableIdList.filter(t => t != parseInt($(this).val()));
+            tableDetailList = tableDetailList.filter(t => t.id != parseInt($(this).val()));
+            $(this).find(':selected').removeAttr('selected');
+            $(this).find(`option[value="${$(this).val()}"]`).removeClass('bg-secondary text-white');
+        }
+        else {
+            tableIdList.push(parseInt($(this).val()));
+            tableDetailList.push({ id: parseInt($(this).val()), capacity: capacity });
+            $(this).find(':selected').attr('selected', 'selected');
+            $(this).find(`option[value="${$(this).val()}"]`).addClass('bg-secondary text-white');
+        }
+        if (tableIdList.length > 0)
+            $("#assignTableBtn").attr("disabled", false);
+        else
+            $("#assignTableBtn").attr("disabled", true);
+        console.log(tableIdList);
+    })
+
+    $('#assignTableForm').submit(function (event) {
+        event.preventDefault();
+        var form = $("#assignTableForm")[0];
+        var formData = new FormData(form);
+        console.log(formData);
+        var isTableArrangedProperly = checkTableArrangedProperly(tableDetailList);
+        if (!isTableArrangedProperly)
+            return;
+
+        console.log(JSON.stringify(tableDetailList));
+        formData.append("tableIds", JSON.stringify(tableDetailList))
+        formData.append("customerName", $('#assignName').val())
+        formData.append("customerEmail", JSON.stringify($('#assignEmail').val()))
+        formData.append("mobileNumber", JSON.stringify($('#assignPhone').val()))
+        formData.append("noOfPerson", JSON.stringify($('#assignNoOfPerson').val()))
+        formData.append("waitingTokenId", $('#wtId').val())
+        @* formData.append("sectionId", JSON.stringify(selectedSectionId)) *@
+            @* formData.append("customerId", $('#assignId').val()) *@
+
+            $.ajax({
+                url: '/OrderAppTable/AssignTable',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    if (response.success == true) {
+                        toastr.success(response.message);
+                        window.location.href = `/orderappmenu/menu/${response.id}`;
+                    }
+                    else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: function (error) {
+                    toastr.error(error.message);
+                }
+            });
+    });
+
+    function checkTableArrangedProperly(tableIds) {
+        var noOfPersons = $("#assignNoOfPerson").val();
+        var tableCapacity = 0;
+        for (let i = 0; i < tableDetailList.length; i++) {
+            tableCapacity += tableDetailList[i].capacity;
+            if (tableCapacity >= parseInt(noOfPersons) && i < tableDetailList.length - 1) {
+                toastr.error("Please pick a smaller table or less tables");
+                return false;
+            }
+        }
+        if (tableCapacity < parseInt(noOfPersons)) {
+            toastr.error("Please pick a bigger table or more tables");
+            return false;
+        }
+        return true;
+    }
+</script>

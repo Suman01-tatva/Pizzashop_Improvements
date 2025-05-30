@@ -1,0 +1,49 @@
+@model PizzaShop.Entity.ViewModels.MenuCategoryViewModel;
+
+@* <div class="modal-header">
+    <h5 class="modal-title">Edit Category</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body">
+    <form id="editCategoryForm" method="post" asp-action="EditCategory" asp-controller="Menu">
+        <input type="hidden" name="Id" value="@Model.Id" />
+        <div class="form-group">
+            <input type="text" class="form-control" name="Name" value="@Model.Name" required />
+        </div>
+        <br />
+        <div class="form-group">
+            <textarea class="form-control" name="Description" placeholder="Description">@Model.Description</textarea>
+        </div>
+        <div class="modal-footer">
+            <button type="submit" class="btn"
+                style="height: 40px; width: 80px; background-color: #0066A7; color: white;">Save</button>
+            <button type="button" class="btn" data-bs-dismiss="modal"
+                style="height: 40px; width: 80px; color: #0066A7; background-color: white; border: 1px solid #0066A7;">Cancel</button>
+        </div>
+    </form>
+</div> *@
+
+<div class="modal-header border-0">
+    <h1 class="modal-title fs-5" id="exampleModalLabel">
+        Edit Category
+    </h1>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body text-center p-1">
+    <form action="" class="p-3" method="post" asp-action="EditCategory" asp-controller="Menu">
+        <input type="hidden" name="Id" value="@Model.Id" />
+        <div class="form-group">
+            <input type="text" class="form-control" name="Name" value="@Model.Name" required />
+        </div>
+        <br />
+        <div class="form-group">
+            <textarea class="form-control" name="Description" placeholder="Description">@Model.Description</textarea>
+        </div>
+        <div class="modal-footer">
+            <button type="submit" class="btn"
+                style="height: 40px; width: 80px; background-color: #0066A7; color: white;">Save</button>
+            <button type="button" class="btn" data-bs-dismiss="modal"
+                style="height: 40px; width: 80px; color: #0066A7; background-color: white; border: 1px solid #0066A7;">Cancel</button>
+        </div>
+
+    </form>

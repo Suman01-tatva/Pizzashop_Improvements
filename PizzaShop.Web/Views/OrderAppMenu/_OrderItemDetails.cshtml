@@ -1,0 +1,314 @@
+@model PizzaShop.Entity.ViewModels.OrderAppMenuPageViewModel;
+
+<div class="orderItemDetails">
+    <div class="fs-6 mb-0">
+        <div class="fs-6">
+            <div class="row">
+                <div class="text-start col-5"><span class="mx-3">Item</span></div>
+                <div class="text-center col-3">
+                    <div
+                        class="d-flex align-items-center justify-content-center @(Model.OrderDetails!.OrderStatus == 2 ? "d-none" : "")">
+                        Quantity
+                    </div>
+                </div>
+                <div class=" col-3">
+                    <div class="d-flex justify-content-start align-items-center">
+                        <span>Amount</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-group-devider fs-6" id="OrderItemListContainer">
+            <input type="text" data-count="@Model.OrderDetails!.OrderItems!.Count()" id="itemCount" hidden>
+            @if (@Model.OrderDetails!.OrderItems!.Count() == 0)
+            {
+                <div class="text-center text-secondary mt-5" id="orderItemEmpty">
+                    <img src="~/images/empty-items.jpg" alt="Not Found" class="center-image mt-4">
+                </div>
+            }
+            @foreach (var i in @Model.OrderDetails.OrderItems!)
+            {
+                <div class="d-flex justify-content-between align-items-center shadow-sm rounded-2 border border-2 p-2 my-2 item-container"
+                    data-id="@i.Id" data-itemid="@i.MenuItemId" data-item='@Html.Raw(Json.Serialize(i))'>
+                    <p class="item-comment d-none"></p>
+                    <div scope="col" class="text-start col-5">
+                        <div class="accordion accordion-flush shadow-none" id="accordionFlushExample">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header itemDetail" id="flush-headingOne">
+                                    <button class="accordion-button collapsed fw-bold p-0" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#@i.Id" aria-expanded="false"
+                                        aria-controls="@i.Id">
+                                        @i.ItemName
+                                    </button>
+                                </h2>
+                                <div id="@i.Id" class="accordion-collapse collapse" aria-labelledby="flush-headingOne"
+                                    data-bs-parent="#accordionFlushExample">
+                                    <div class="accordion-body p-0">
+                                        <ul class="mb-0">
+                                            @foreach (var m in i.Modifiers!)
+                                            {
+                                                <li class="text-start">@m.Name <span class="mx-2">&#8377;@m.Rate</span></li>
+                                            }
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <div class="d-flex justify-content-end p-0 @(Model.OrderDetails.OrderStatus == 2 ? "d-none" : "")">
+                            <div class="quantity item-quantity">
+                                <button class="minus border-0 bg-white mx-1" aria-label="Decrease"
+                                    data-quantity="@i.Quantity" data-id="@i.Id">&minus;</button>
+                                <input type="number" class="input-box quantity-input" data-rate="@i.Price"
+                                    data-modifier="@i.ModifiersPrice" value="@i.Quantity" min="1">
+                                <button class="plus border-0 bg-white mx-1" aria-label="Increase">&plus;</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div scope="col-3 text-left d-flex justify-content-between ms-2">
+                        <div class="text-end">
+                            <div class="d-flex flex-column">
+                                <p class="mb-0 itemPrice">&#8377;@i.Price</p>
+                                <p class="modifierPrice">&#8377;@i.ModifiersPrice</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-0 col-1 mx-0">
+                        <button class="btn border-0 deleteItem @(Model.OrderDetails.OrderStatus == 2 ? "d-none" : "")"
+                            data-item='@Html.Raw(Json.Serialize(i))'>
+                            <i class="fa-regular fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+<hr>
+<div>
+    <div class="d-flex justify-content-between">
+        <span class="fw-medium">Sub Total</span>
+        <span class="fw-medium" id="subtotal"></span>
+    </div>
+    <div id="includedTaxes">
+        @foreach (var tax in Model.OrderDetails.TaxList!)
+        {
+            if (tax.IsActive == true)
+            {
+                <div class="d-flex justify-content-between order-tax" data-tax='@Html.Raw(Json.Serialize(@tax))'>
+                    <span>@tax.Name</span>
+                    <span class="tax-amount">&#8377;@tax.TaxAmount</span>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- Not Included Taxes Section -->
+    <div id="notIncludedTaxes">
+        @foreach (var tax in Model.OrderDetails.TaxList!)
+        {
+            if (tax.IsActive == false)
+            {
+                <div class="d-flex justify-content-between">
+                    <div class="d-flex not-included-tax" data-tax='@Html.Raw(Json.Serialize(@tax))'>
+                        <input type="checkbox"
+                            class="form-check-input include-tax-checkbox @(Model.OrderDetails.OrderStatus == 2 ? "d-none" : "")"
+                            @(tax.TaxValue > 0 ? "checked" : "") />
+                        <span class="@(Model.OrderDetails.OrderStatus == 2 ? "" : "ms-2")">@tax.Name</span>
+                    </div>
+                    <span class="tax-amount">&#8377;@tax.TaxAmount</span>
+                </div>
+            }
+        }
+    </div>
+    <div class="d-flex justify-content-between">
+        <span class="fw-medium">Total</span>
+        <span class="fw-medium" id="total"></span>
+    </div>
+    <div class="row mx-0 px-0">
+        <div class="col px-0">
+            Payment Method
+        </div>
+        <div class="col d-flex justify-content-end px-0">
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="flexRadioDisabled" id="flexRadioDisabled" checked
+                    disabled>
+                <label class="form-check-label" for="flexRadioDisabled">
+                    Cash
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="flexRadioDisabled" id="flexRadioDisabled" disabled>
+                <label class="form-check-label" for="flexRadioDisabled">
+                    Card
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="flexRadioDisabled" id="flexRadioDisabled" disabled>
+                <label class="form-check-label" for="flexRadioDisabled">
+                    UPI
+                </label>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="d-flex gap-2 flex-wrap justify-content-end my-2">
+    @if (Model.OrderDetails.OrderStatus == 1 || Model.OrderDetails.OrderStatus == 3)
+    {
+        <button class="fill-btn px-lg-5" id="saveOrder">Save</button>
+    }
+    else
+    {
+        <button class="px-lg-4 btn btn-secondary" disabled>Save</button>
+    }
+    @if (Model.OrderDetails.OrderStatus == 3)
+    {
+        <button class="outline-btn px-lg-4" id="completeOrder">Complete</button>
+    }
+    else
+    {
+        <button class="px-lg-4 btn btn-secondary" disabled>Complete</button>
+    }
+    @if (Model.OrderDetails.OrderStatus == 2)
+    {
+        <button class="outline-btn" id="generateInvoice">Generate Invoice</button>
+    }
+    else
+    {
+        <button class="btn btn-secondary p-2" disabled>Generate Invoice</button>
+    }
+</div>
+<div class="d-flex justify-content-end">
+    @if (Model.OrderDetails.OrderStatus != 2)
+    {
+        <button class="outline-btn px-lg-5 px-md-5 " id="cancelOrder">Cancel</button>
+    }
+    else
+    {
+        <button class="btn btn-secondary" disabled>Cancel</button>
+    }
+</div>
+<script>
+    function calculateSubtotal() {
+        let subtotal = 0;
+        $('.quantity-input').each(function () {
+            const rate = parseFloat($(this).data('rate')) || 0;
+            const modifierPrice = parseFloat($(this).data('modifier')) || 0;
+            const quantity = parseInt($(this).val()) || 0;
+
+            const itemTotalPrice = rate * quantity;
+            const modifierTotalPrice = modifierPrice * quantity;
+
+            $(this).closest('.item-container').find('.itemPrice').text(`₹ ${thousandSeparator(itemTotalPrice.toFixed(2))}`);
+            $(this).closest('.item-container').find('.modifierPrice').text(`₹ ${thousandSeparator(modifierTotalPrice.toFixed(2))}`);
+
+            subtotal += (rate + modifierPrice) * quantity;
+        });
+
+        $('#subtotal').text(`₹ ${thousandSeparator(subtotal.toFixed(2))}`);
+        subTotal = subtotal;
+        updateTaxValues(subtotal);
+    }
+
+    function updateTaxValues(subtotal) {
+        let totalTax = 0;
+
+        $('.order-tax').each(function () {
+            const tax = $(this).data('tax');
+            const taxType = tax.type;
+            const taxValue = parseFloat(tax.taxValue) || 0;
+
+            let calculatedTax = 0;
+            if (taxType === true) {
+                calculatedTax = (subtotal * parseFloat(tax.taxAmount)) / 100;
+            } else {
+                calculatedTax = parseFloat(tax.taxAmount);
+            }
+            $(this).find('span.tax-amount').last().text(`₹ ${thousandSeparator(calculatedTax.toFixed(2))}`);
+            totalTax += calculatedTax;
+        });
+
+        $('#notIncludedTaxes .include-tax-checkbox').each(function () {
+            const tax = $(this).closest('.not-included-tax').data('tax');
+            const taxType = tax.type;
+            const taxValue = parseFloat(tax.taxValue) || 0;
+
+            let calculatedTax = 0;
+
+            if ($(this).is(':checked')) {
+                if (taxType === true) { // Percentage-based tax
+                    calculatedTax = (subtotal * parseFloat(tax.taxAmount)) / 100;
+                } else { // Fixed amount tax
+                    calculatedTax = parseFloat(tax.taxAmount);
+                }
+                $(this).closest('.not-included-tax').parent().find('span.tax-amount').last().text(`₹ ${thousandSeparator(calculatedTax.toFixed(2))}`);
+                totalTax += calculatedTax;
+            } else {
+                $(this).closest('.not-included-tax').parent().find('span.tax-amount').last().text(`₹ 0.00`);
+            }
+        });
+        const total = subtotal + totalTax;
+        totalAmountOfOrder = total;
+        $('#total').text(`₹ ${thousandSeparator(total.toFixed(2))}`);
+    }
+
+    $(document).ready(function () {
+        calculateSubtotal();
+
+        $(document).on('input', '.quantity-input', function () {
+            calculateSubtotal();
+        });
+
+        $(document).on('change', '.include-tax-checkbox', function () {
+            calculateSubtotal();
+        });
+
+        $(document).on('click', ".minus",
+            function (e) {
+                e.stopPropagation();
+                const input = $(this).siblings('.quantity-input');
+                const currentValue = parseInt(input.val()) || 1;
+                var id = $(this).data('id');
+                if ((currentValue - 1) == 0)
+                    return;
+                if (id == 0) {
+                    input.val(currentValue - 1);
+                    calculateSubtotal();
+                    return;
+                }
+
+                console.log(id, currentValue - 1);
+                if (currentValue > 1) {
+                    $.ajax({
+                        type: "POST",
+                        url: '@Url.Action("CheckReadyItemsQuantity", "OrderAppMenu")',
+                        data: { id: id, quantity: (currentValue - 1) },
+                        success: function (response) {
+                            if (response.success) {
+                                input.val(currentValue - 1);
+                                calculateSubtotal();
+                            } else {
+                                toastr.warning("You Can Not Remove Ready Items");
+                                return;
+                            }
+                        }
+                    })
+                }
+            });
+
+        $(document).on('click', ".plus",
+            function (e) {
+                e.stopPropagation();
+                const input = $(this).siblings('.quantity-input');
+                const currentValue = parseInt(input.val()) || 1;
+                input.val(currentValue + 1);
+                calculateSubtotal();
+            });
+    });
+
+    function thousandSeparator(number) {
+        return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+</script>

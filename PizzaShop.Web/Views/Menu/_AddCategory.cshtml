@@ -1,0 +1,35 @@
+@model PizzaShop.Entity.ViewModels.MenuCategoryViewModel;
+
+<div class="container mt-5">
+    <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">Add Category</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center p-1">
+                    <form class="p-3" id="addNewCategoryForm">
+                        <div class="form-floating mb-3 p-0">
+                            <input asp-for="Name" type="text" class="form-control" id="categoryName" name="Name"
+                                placeholder="Category" />
+                            <label for="categoryName" asp-validation-for="">Name</label>
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-floating p-0">
+                            <textarea asp-for="Description" class="form-control" name="Description"
+                                placeholder="Description" id="categoryDescription"></textarea>
+                            <label for="categoryDescription">Description</label>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                    </form>
+                    <div class="modal-footer d-flex justify-content-end border-0">
+                        <button class="fill-btn" id="submitNewCategory">Save</button>
+                        <button type="button" class="btn outline-btn" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

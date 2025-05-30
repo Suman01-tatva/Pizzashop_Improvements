@@ -1,0 +1,33 @@
+@model PizzaShop.Entity.ViewModels.MenuCategoryViewModel
+<partial name="_ValidationScriptsPartial" />
+<div class="modal-header border-0">
+    <h1 class="modal-title fs-5" id="exampleModalLabel">
+        Edit Category
+    </h1>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body text-center p-1">
+    <form id="editCategoryForm" class="p-3">
+        <input type="hidden" id="editCategoryId" name="Id" value="@Model.Id" />
+        <div class="form-floating mb-3 p-0">
+            <input type="text" class="form-control" id="editCategoryName" name="Name" placeholder="Category"
+                value="@Model.Name" />
+            <label for="editCategoryName">Name</label>
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+        <div class="form-floating p-0">
+            <textarea class="form-control" name="Description" placeholder="Description"
+                id="editCategoryDesc">@Model.Description</textarea>
+            <label for="editCategoryDesc">Description</label>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+        <div class="modal-footer d-flex justify-content-center border-0">
+            <button type="button" class="fill-btn" id="saveCategoryBtn">
+                Save
+            </button>
+            <button type="button" class="outline-btn" data-bs-dismiss="modal">
+                Cancel
+            </button>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,252 @@
+@model PizzaShop.Entity.ViewModels.OrderPageViewModel;
+@{
+    var PageSize = Model.PageSize;
+    var PageIndex = Model.PageIndex;
+    var TotalPage = Model.TotalPage;
+    var TotalOrders = Model.TotalOrders;
+    var Status = Model.Status;
+    var SearchString = Model.SearchString;
+    var SortColumn = Model.sortColumn;
+    var FromDate = Model.FromDate;
+    var ToDate = Model.ToDate;
+    var DateRange = Model.DateRange;
+}
+<div class="table-responsive mt-3 rounded shadow p-2 bg-white">
+    <table class="table" id="tbl">
+        <thead>
+            <tr>
+                <th>#Order
+                    <a href="#" class="sort-column" data-sort="@ViewData["OrderIdSortParam"]"
+                        style="text-decoration: none;color: inherit;">
+                        <i class="fa-solid fa-sort"></i>
+                    </a>
+                </th>
+                <th>Date
+                    <a href="#" class="sort-column" data-sort="@ViewData["DateSortParam"]"
+                        style="text-decoration: none;color: inherit;">
+                        <i class="fa-solid fa-sort"></i>
+                    </a>
+                </th>
+                <th>Customer
+                    <a href="#" class="sort-column" data-sort="@ViewData["CustomerSortParam"]"
+                        style="text-decoration: none;color: inherit;">
+                        <i class="fa-solid fa-sort"></i>
+                    </a>
+                </th>
+                <th>Status</th>
+                <th>Payment Mode</th>
+                <th>Rating</th>
+                <th>Total Amount
+                    <a href="#" class="sort-column" data-sort="@ViewData["TotalAmountSortParam"]"
+                        style="text-decoration: none;color: inherit;">
+                        <i class="fa-solid fa-sort"></i>
+                    </a>
+                </th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Orders.Count == 0)
+            {
+                <tr>
+                    <td colspan="8" class="text-center">
+                        <img src="~/images/empty-items.jpg" alt="Not Found" class="center-image">
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var order in Model.Orders)
+                {
+                    <tr>
+                        <td>@order.Id</td>
+                        <td>@order.Date</td>
+                        <td>@order.CustomerName</td>
+                        <td>@order.Status</td>
+                        <td>@order.PaymentMode</td>
+                        <td>
+                            <div class="star-rating">
+                                @if (order.Rating != null)
+                                {
+                                    <div class="star-rating-filled" style="width:@(order.Rating * 20)%;">
+                                        ★ ★ ★ ★ ★
+                                    </div>
+                                }
+                                <div class="star-rating-blank">
+                                    ★ ★ ★ ★ ★
+                                </div>
+                            </div>
+                        </td>
+                        <td>@order.TotalAmount?.ToString("N2")</td>
+                        <td>
+                            <a href="javascript:void(0);" style="text-decoration: none; color: inherit;"
+                                class="edit-tax getOrderPdf" data-id="@order.Id">
+                                <i class="fa-solid fa-file-pdf m-1" style="color: rgb(99, 99, 99);"></i>
+                            </a>
+                            <a href="javascript:void(0)" style="text-decoration: none; color: inherit;" data-id="@order.Id"
+                                class="gerOrderDetails">
+                                <i class="fas fa-eye" style="color: rgb(99, 99, 99);"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+    @* Pagination *@
+    <div class="d-flex justify-content-end align-items-center mt-2">
+        <p class="mb-0">Items Per page</p>
+        <select class="ms-3 form-select w-auto" aria-label="Default select example" id="ordersPageSize">
+            <option value="5" selected="@(PageSize == 5 ? true : false)">5</option>
+            <option value="10" selected="@(PageSize == 10 ? true : false)">10</option>
+            <option value="15" selected="@(PageSize == 15 ? true : false)">15</option>
+        </select>
+        <span class="mb-0 ms-2 me-2 d-none d-md-block" id="showing">Showing @(Math.Min(((PageIndex - 1) * PageSize) + 1,
+                        TotalOrders)) -
+            @(Math.Min(PageIndex * PageSize, TotalOrders)) of @TotalOrders</span>
+        @if (PageIndex > 1)
+        {
+            <a class="bg-light border-1 bg-light mx-2 px-2 btn btn-outline-dark" name="PageIndex" id="PreviousOrders">
+                <i class="fa fa-chevron-left"></i>
+            </a>
+        }
+        else
+        {
+            <button class="bg-light border-1 bg-light mx-2 px-2 btn btn-outline-dark" name="PageIndex" hidden>
+                <i class="fa fa-chevron-left"></i>
+            </button>
+        }
+
+        @if (PageIndex < TotalPage)
+        {
+            <a class="bg-light border-1 bg-light mx-2 px-2 btn btn-outline-dark" name="PageIndex" id="NextOrders">
+                <i class="fa fa-chevron-right"></i>
+            </a>
+        }
+        else
+        {
+            <button class="bg-light border-1 bg-light mx-2 px-2 btn btn-outline-dark" name="PageIndex" hidden>
+                <i class="fa fa-chevron-right"></i>
+            </button>
+        }
+    </div>
+
+</div>
+<div id="InvoiceDetailContainer" hidden>
+
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+<script>
+    $(document).ready(function () {
+        var pageIndex = @PageIndex, pageSize = 5, searchString = "", sortColumn = "@SortColumn", isAsc = true, status = 0, fromDate = "", toDate = "", dateRange = "AllTime";
+        var ajaxRequest;
+        var debounceTimer;
+
+        function GetFilteredOrders() {
+            var SearchString = $("#searchOrders").val();
+            var pageSize = $("#ordersPageSize").val();
+            var status = $("#statusDropdown").val();
+            var dateRange = $("#dateRange").val();
+            var fromDate = $("#fromDate").val();
+            var toDate = $("#toDate").val();
+
+            if (ajaxRequest && ajaxRequest.readyState !== 4) {
+                ajaxRequest.abort();
+            }
+            ajaxRequest = $.ajax({
+                url: "/Order/GetOrders",
+                type: "GET",
+                data: {
+                    searchString: SearchString,
+                    pageIndex: pageIndex,
+                    pageSize: pageSize,
+                    sortColumn: sortColumn,
+                    isAsc: isAsc,
+                    status: status,
+                    fromDate: fromDate,
+                    toDate: toDate,
+                    dateRange: dateRange
+                },
+                success: function (data) {
+                    @* console.log(data) *@
+                        $("#orderList").html(data);
+                }
+            })
+        }
+
+        $('#searchOrders').keyup(function () {
+            console.log("Search")
+            clearTimeout(debounceTimer);
+            pageIndex = 1
+            pageSize = @PageSize
+
+                debounceTimer = setTimeout(() => {
+                    GetFilteredOrders();
+                }, 400)
+        })
+
+        $('#ordersPageSize').change(function () {
+            pageIndex = 1
+            GetFilteredOrders();
+        })
+
+        $("#PreviousOrders").click(function () {
+            console.log("prev")
+            pageIndex -= 1;
+            GetFilteredOrders()
+        })
+
+        $('#NextOrders').click(function () {
+            console.log("next")
+            pageIndex += 1;
+            GetFilteredOrders()
+        })
+
+        $(document).on('click', '.sort-column', function (e) {
+            e.preventDefault();
+            sortColumn = $(this).data('sort');
+            pageIndex = 1;
+            GetFilteredOrders();
+        });
+        $(document).ready(function () {
+            $(".gerOrderDetails").click(function () {
+                var id = $(this).data('id');
+                window.location.href = "/Order/OrderDetails/" + id;
+            });
+        });
+
+        $(".getOrderPdf").click(function () {
+            var id = $(this).data('id')
+            console.log(id);
+            $.ajax({
+                url: "/Order/InvoiceDetail",
+                type: "GET",
+                data: {
+                    id: id
+                },
+                success: function (response) {
+                    $("#InvoiceDetailContainer").html(response);
+                    const element = document.querySelector('#invoice-detail');
+                    console.log(response);
+                    const isMobile = window.innerWidth < 768;
+
+                    const options = {
+                        margin: 1,
+                        filename: 'OrderDetails.pdf',
+                        image: { type: 'jpeg', quality: 0.98 },
+                        html2canvas: {
+                            scale: isMobile ? 3 : 2,
+                            windowWidth: 800
+                        },
+                        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+                    };
+
+                    html2pdf().set(options).from(element).save();
+                },
+                error: function (error) {
+                    toastr.error("Error while download pdf file");
+                }
+            })
+        })
+    })
+</script>

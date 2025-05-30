@@ -1,0 +1,83 @@
+.star-rating {
+  position: relative;
+  display: inline-block;
+  font-size: 20px;
+  color: #ffffff;
+}
+
+.star-rating-filled {
+  position: absolute;
+  top: 0;
+  left: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  color: #ffc107;
+}
+
+.star-rating-blank {
+  display: inline-block;
+  color: #ffffff;
+  -webkit-text-stroke: 1px #ffc107;
+}
+
+.invoice-detail-table > thead > tr > th {
+  color: white;
+  background-color: #006098;
+  font-size: 15px;
+}
+.invoice-detail-table > tbody > tr > td {
+  color: gray;
+  font-size: 15px;
+}
+.divider {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--textBlue);
+}
+.text-blue {
+  color: #006098;
+}
+
+.modifier {
+  font-size: smaller;
+}
+
+.orderDetails {
+  font-family: Arial, sans-serif;
+  color: #4d4a4d;
+}
+
+.orderDetails h2,
+.orderDetails h4,
+.orderDetails h5 {
+  color: #0066a7;
+}
+
+.orderDetails .card {
+  border: 1px solid #ddd;
+  margin-bottom: 20px;
+}
+
+.orderDetails .card-body {
+  padding: 20px;
+}
+
+.orderDetails .table th,
+.orderDetails .table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.orderDetails .table th {
+  background-color: #f2f2f2;
+}
+
+.orderDetails .table-responsive {
+  overflow-x: auto;
+}
+
+@media (max-width: 621px) {
+  .export-btn {
+    display: none;
+  }
+}

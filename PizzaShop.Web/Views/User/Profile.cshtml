@@ -1,0 +1,215 @@
+@using System.Security.Claims;
+@{
+    ViewData["Title"] = "Profile";
+    var Email = User.FindFirst(ClaimTypes.Email)?.Value;
+}
+
+@model PizzaShop.Entity.ViewModels.ProfileViewModel;
+
+<div class="col-12 content-bg">
+    <!-- Add User header -->
+    <div class="page-title">
+        <h1>My Profile</h1>
+    </div>
+    <!-- Form -->
+    <div class="shadow card container-fluid profile-card shadow p-0">
+        <div>
+            <img class="profile-bg" src="~/images/profile_div_bg.jpg" alt="profile-bg">
+        </div>
+        <form asp-controller="User" asp-action="Profile" class="row needs-validation mt-1 mb-3 mx-2"
+            enctype="multipart/form-data">
+            <div class="row mx-2">
+                <div class="col-md-2 d-flex justify-content-center p-0">
+                    <img src="~/images/@(Model?.ProfileImg ?? "Default_pfp.svg.png")"
+                        class="profile-img profile-photo rounded-circle" alt="profile-img">
+                    <input type="file" asp-for="ProfileImagePath" name="ProfileImagePath" id="imageInput"
+                        accept="image/*" style="display: none;">
+                    <input type="hidden" asp-for="ProfileImg" name="ProfileImg">
+                    <label id="changeImageButton" for="imageInput"
+                        class="position-absolute bg-white camera-position z-3 rounded-circle border z-2 shadow-sm">
+                        <i class="fa fa-camera p-2 " aria-hidden="true"></i>
+                    </label>
+                </div>
+                <div class="col-md-7 text-center text-md-start p-0 mt-3">
+                    <h3>@Model.FirstName @Model.LastName</h3>
+                    <p>@Model.RoleName</p>
+                </div>
+                <div class="col-md-3 text-center mb-3">
+                    @Model.Email
+                </div>
+            </div>
+            <div>
+                <div class="">
+                    <input type="text" asp-for="Email" hidden>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input type="firstName" class="form-control" id="firstName" placeholder="firstName"
+                                    name="FirstName" asp-for="FirstName" />
+                                <label for="firstName">First Name*</label>
+                            </div>
+                            <span class="text-danger fs-6 ms-2" asp-validation-for="FirstName"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="lastName" placeholder="lastName"
+                                    name="LastName" asp-for="LastName" />
+                                <label for="LastName">Last Name*</label>
+                            </div>
+                            <span class="text-danger fs-6 ms-2" asp-validation-for="LastName"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="userName" placeholder="name" name="Username"
+                                asp-for="Username" />
+                            <label for="userName">User Name*</label>
+                        </div>
+                        <span class="text-danger fs-6 ms-2" asp-validation-for="Username"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            @* <input type="number" class="form-control" id="phone" placeholder="name" name="Phone"
+                                asp-for="Phone" /> *@
+                            <input type="number" id="phone" class="form-control" asp-for="Phone" pattern="[0-9]{10}"
+                                maxlength="10" required>
+
+                            <label for="phone">Phone*</label>
+                        </div>
+                        <span class="text-danger fs-6 ms-2" asp-validation-for="Phone"></span>
+                    </div>
+                </div>
+                <div>
+                    <div class="row">
+                        <div class="form-floating col-md-4 mb-3">
+                            <select id="CountryId" name="CountryId" class="form-select" asp-for="CountryId"
+                                asp-items="ViewBag.Countries">
+                                <option selected hidden disabled>Select Country</option>
+                            </select>
+                            <label for="CountryId" class="float">Country*</label>
+                            <span asp-validation-for="CountryId" style="color: red;"></span>
+                        </div>
+                        <div class="form-floating col-md-4 mb-3">
+                            <select id="StateId" name="StateId" class="form-select" asp-for="StateId"
+                                asp-items="ViewBag.States">
+                                <option selected hidden disabled>Select State</option>
+                            </select>
+                            <label for="StateId" class="float">State*</label>
+                            <span asp-validation-for="StateId" style="color: red;"></span>
+                        </div>
+                        <div class="form-floating col-md-4 mb-3">
+                            <select id="CityId" name="CityId" class="form-select" asp-for="CityId"
+                                asp-items="ViewBag.Cities">
+                                <option selected hidden disabled>Select City</option>
+                            </select>
+                            <label for="CityId" class="float">City*</label>
+                            <span asp-validation-for="CityId" style="color: red;"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="form-floating">
+                            <input type="text" asp-for="Address" class="form-control" id="Address"
+                                placeholder="Address" />
+                            <label for="Address">Address*</label>
+                        </div>
+                        <span asp-validation-for="Address" class="text-danger fs-6 ms-2"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-floating">
+                            <input type="number" class="form-control" maxlength="6" minlength="6" id="ZipCode"
+                                placeholder="ZipCode" asp-for="Zipcode" />
+                            <label for="ZipCode">ZipCode*</label>
+                        </div>
+                        <span class="text-danger fs-6 ms-2" asp-validation-for="Zipcode"></span>
+                    </div>
+                </div>
+                <div>
+                    <div class="mt-2 gap-3 d-flex justify-content-end">
+                        <button class="fill-btn" type="submit">
+                            Update
+                        </button>
+                        <button class="outline-btn" type="button" id="Cancel"
+                            onclick="window.location.href = '@Url.Action("AdminDashboard", "Home")'">Cancel</button>
+                    </div>
+                    <span class="text-success">@ViewData["ProfileSuccessMessage"]</span>
+                </div>
+        </form>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var initialStateId = '@Model.StateId';
+            var initialCityId = '@Model.CityId';
+
+            $("#CountryId").change(function () {
+                $.getJSON('/User/GetStates', { countryId: $(this).val() }, function (data) {
+                    var stateDropdown = $("#StateId");
+                    stateDropdown.empty().append('<option>Select State</option>');
+                    $.each(data, function (i, state) {
+                        stateDropdown.append('<option value="' + state.id + '">' + state.name + '</option>');
+                    });
+                    if (initialStateId) {
+                        stateDropdown.val(initialStateId);
+                        @* initialStateId = null; *@
+                                            }
+                    stateDropdown.change();
+                });
+            });
+
+            $("#StateId").change(function () {
+                $.getJSON('/User/GetCities', { stateId: $(this).val() }, function (data) {
+                    var cityDropdown = $("#CityId");
+                    cityDropdown.empty().append('<option>Select City</option>');
+                    $.each(data, function (i, city) {
+                        cityDropdown.append('<option value="' + city.id + '">' + city.name + '</option>');
+                    });
+                    if (initialCityId) {
+                        cityDropdown.val(initialCityId);
+                        @* initialCityId = null; *@
+                                            }
+                });
+            });
+
+            $('#CountryId').change();
+        });
+
+        @* document.getElementById('imageInput').addEventListener('change', function (event) {
+            var file = event.target.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    document.querySelector(".profile-img").src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        }); *@
+            document.getElementById('imageInput').addEventListener("change", function (event) {
+                var file = event.target.files[0];
+                const uploadfile = document.querySelector('#imageInput');
+                if (file) {
+                    if (!file.type.startsWith('image/')) {
+                        toastr.warning("Invalid file type. Please upload an image file.");
+                        uploadfile.value = '';
+                        return;
+                    }
+                    const maxSize = 2 * 1024 * 1024; // 5MB
+                    if (file.size > maxSize) {
+                        toastr.warning("File size exceeds 2MB. Please choose a smaller image.");
+                        uploadfile.value = '';
+                        return;
+                    }
+
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+                        document.querySelector(".profile-img").src = e.target.result;
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+    </script>
+}

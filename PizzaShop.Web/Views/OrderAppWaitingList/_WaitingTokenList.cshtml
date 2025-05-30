@@ -1,0 +1,113 @@
+@model List<PizzaShop.Entity.ViewModels.WaitingTokenViewModel>;
+
+<section class="table-responsive">
+    <table class="table table-hover user-table mb-0">
+        <thead>
+            <tr>
+                <th scope="col" class="text-left">#Token No </th>
+                <th scope="col" class="text-center">Created At</th>
+                <th scope="col" class="text-center">Waiting Time</th>
+                <th scope="col" class="text-center">Name</th>
+                <th scope="col" class="text-center">No. of Persons</th>
+                <th scope="col" class="text-center">Phone Number</th>
+                <th scope="col" class="text-center">Email</th>
+                <th scope="col" class="text-center">Action</th>
+            </tr>
+        </thead>
+
+        <tbody class="table-group-devider">
+            @if (@Model.Count() == 0)
+            {
+                <tr>
+                    <td colspan="8" class="text-center">
+                        <img src="~/images/empty-items.jpg" alt="Not Found" class="center-image">
+                    </td>
+                </tr>
+            }
+            @foreach (var c in Model)
+            {
+                <tr>
+                    <td scope="col" class="text-left">#@c.Id</td>
+                    <td scope="col" class="text-center">@c.CreatedAt</td>
+                    <td scope="col" class="text-center">@c.WaitingTime</td>
+                    <td scope="col" class="text-center">@c.CustomerName</td>
+                    <td scope="col" class="text-center">@c.NoOfPeople</td>
+                    <td scope="col" class="text-center">@c.MobileNumber</td>
+                    <td scope="col" class="text-center">@c.CustomerEmail</td>
+                    <td scope="col" class="text-center">
+                        <div class="d-flex justify-content-center">
+                            <button type="button" class="btn p-0 border-0 me-3 editWaitingToken" data-id="@c.Id">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button type="button" class="btn p-0 border-0 me-3 deleteWaitingToken" data-id="@c.Id">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </button>
+                            <button type="button" class="btn p-0 border-0 assignWaitingToken" data-id="@c.Id"
+                                data-content='@Html.Raw(Json.Serialize(c))'>
+                                <i class="fa-solid fa-user-check"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</section>
+
+<div id="AssignWTContainer"></div>
+@* @Html.Partial("_AssignTableModal") *@
+
+<script>
+    var WaitingTokenData;
+    $(".deleteWaitingToken").click(function () {
+        deleteWtId = $(this).data('id');
+        console.log(deleteWtId);
+
+        $("#deleteWtModal").modal('show');
+    })
+
+    $(".editWaitingToken").click(function () {
+        var id = $(this).data('id');
+
+        $.ajax({
+            url: '@Url.Action("AddEditWaitingToken", "OrderAppWaitingList")',
+            type: 'GET',
+            data: { id: id },
+            success: function (response) {
+                $("#WaitingTokenContainer").html(response);
+                $("#addEditWaitingListModal").modal('show');
+            },
+            error: function (error) {
+                toastr.error(error.message);
+            }
+        })
+    })
+
+    $(".assignWaitingToken").click(function () {
+        var id = $(this).data('id');
+        WaitingTokenData = $(this).data('content');
+        @* WaitingTokenData = JSON.parse(content); *@
+            console.log(WaitingTokenData);
+        $.ajax({
+            url: '@Url.Action("AssignWaitingToken", "OrderAppWaitingList")',
+            type: 'GET',
+            data: { id: id },
+            success: function (response) {
+                $("#AssignWTContainer").html(response);
+                settValues();
+                $("#assignWtModal").modal('show');
+            },
+            error: function (error) {
+                toastr.error(error.message);
+            }
+        })
+    })
+
+    function settValues() {
+        $("#assignEmail").val(WaitingTokenData.customerEmail || "");
+        $("#assignPhone").val(WaitingTokenData.mobileNumber || "");
+        $("#assignName").val(WaitingTokenData.customerName || "");
+        $("#assignNoOfPerson").val(WaitingTokenData.noOfPeople || "");
+        $("#wtId").val(WaitingTokenData.id);
+    }
+</script>

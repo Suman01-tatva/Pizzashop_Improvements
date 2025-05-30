@@ -1,0 +1,220 @@
+@model PizzaShop.Entity.ViewModels.UserPageViewModel;
+@inject IHttpContextAccessor Accessor;
+@using Newtonsoft.Json;
+@using PizzaShop.Entity.ViewModels;
+@{
+    var PageSize = Model.PageSize;
+    var PageIndex = Model.PageIndex;
+    var TotalPage = Model.TotalPage;
+    var SearchString = Model.SearchString;
+    var TotalRecord = Model.TotalUsers;
+    var sortOrder = Model.SortOrder;
+    var permission =
+    JsonConvert.DeserializeObject<List<RolePermissionViewModel>>(Accessor.HttpContext.Session.GetString("permission"));
+}
+
+<section class="table-responsive shadow card p-2">
+    <table class="table user-table mb-0">
+        <thead>
+            <tr>
+                <th scope="col">
+                    Name
+                    <a href="#" class="sort-link" data-sort="@ViewData["UsernameSortParam"]"
+                        style="text-decoration: none;color: inherit;">
+                        <i class="fa-solid fa-sort"></i>
+                    </a>
+                </th>
+                <th scope="col">
+                    Email
+                </th>
+                <th scope="col">
+                    <div class="d-flex justify-content-center align-items-center">Phone</div>
+                </th>
+                <th scope="col">
+                    <div class="d-flex gap-2 justify-content-center align-items-center">
+                        Role
+                        <a href="#" class="sort-link" data-sort="@ViewData["RoleSortParam"]">
+                            <i class="fa-solid fa-sort"></i>
+                        </a>
+                    </div>
+                </th>
+                <th scope="col">
+                    <div class="d-flex justify-content-center align-items-center">Status</div>
+                </th>
+                <th scope="col"
+                    class="d-@((permission[0].CanEdit == false && permission[0].CanDelete == false) ? "none" : "")">
+                    <div class="d-flex justify-content-center align-items-center">Action</div>
+                </th>
+            </tr>
+        </thead>
+        <tbody class="table-group-devider p-3">
+            @if (@Model.UserList.Count() == 0)
+            {
+                <tr>
+                    <td colspan="6" class="text-center">
+                        <img src="~/images/empty-items.jpg" alt="Not Found" class="center-image">
+                    </td>
+                </tr>
+            }
+            @foreach (var user in Model.UserList)
+            {
+                <tr id="@user.Id">
+                    <td style="min-width: 200px;">
+                        <img src="~/images/@(user.ProfileImage != null ? user.ProfileImage : "Default_pfp.svg.png")"
+                            alt="user profile img" class="user-profile-img rounded-circle" />
+                        @user.FirstName @user.LastName
+                    </td>
+                    <td>
+                        @user.Email
+                    </td>
+                    <td>
+                        <div class="d-flex justify-content-center align-items-center">@user.Phone</div>
+                    </td>
+                    <td>
+                        <div class="d-flex justify-content-center align-items-center">
+                            @switch (@user.RoleId)
+                            {
+                                case 1:
+                                    <div>Admin</div>
+                                    break;
+                                case 2:
+                                    <div>Account Manager</div>
+                                    break;
+                                case 3:
+                                    <div>Chef</div>
+                                    break;
+                            }
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex justify-content-center align-items-center">
+                            @if ((bool)@user.IsActive)
+                            {
+                                <div class="active-status">Active</div>
+                            }
+                            else
+                            {
+                                <div class="inActive-status">Inactive</div>
+                            }
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex gap-2 justify-content-center align-items-center">
+                            <a asp-action="UpdateUser" asp-controller="User" asp-route-id="@user.Id"
+                                class="d-@(permission[0].CanEdit == false ? "none" : "")">
+                                <i class="fa-solid fa-pen-clip"></i>
+                            </a>
+                            <a class="bi bi-trash m-1 d-@(permission[0].CanDelete == false ? "none" : "")"
+                                href="javascript:void(0)" onclick="confirmDelete(@user.Id,@user.RoleId)">
+                                <i class="fa-solid fa-trash"></i>
+                            </a>
+
+                            <form id="deleteForm-@user.Id-@user.RoleId" method="post"
+                                action="@Url.Action("DeleteUser", "User", new { id = user.Id, roleId = user.RoleId })"
+                                style="display:none;">
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <div class="d-flex justify-content-center justify-content-sm-end align-items-center mt-4 mx-3 mb-3">
+        <p class="mb-0 fs-6">Items Per page</p>
+        <select class="mx-2 form-select w-auto" aria-label="Default select example" id="userPageSize">
+            <option value="5" selected="@(PageSize == 5 ? true : false)">5</option>
+            <option value="10" selected="@(PageSize == 10 ? true : false)">10</option>
+            <option value="15" selected="@(PageSize == 15 ? true : false)">15</option>
+        </select>
+
+        <span class="mb-0 ms-2 me-2 d-none d-md-block" id="showing">Showing @(Math.Min(((PageIndex - 1) * PageSize) + 1,
+                        TotalRecord)) -
+            @(Math.Min(PageIndex * PageSize, TotalRecord)) of @TotalRecord</span>
+        @if (PageIndex > 1)
+        {
+            <a class="bg-llight border-1 bg-light px-2 btn btn-outline-dark mx-2" name="PageIndex" id="PreviousUsers">
+                <i class="fa fa-chevron-left"></i>
+            </a>
+        }
+        else
+        {
+            <button class="bg-llight border-1 bg-light px-2 btn btn-outline-dark" name="PageIndex" hidden>
+                <i class="fa fa-chevron-left"></i>
+            </button>
+        }
+
+        @if (PageIndex < TotalPage)
+        {
+            <a class="bg-llight border-1 bg-light px-2 btn btn-outline-dark" name="PageIndex" id="NextUser">
+                <i class="fa fa-chevron-right"></i>
+            </a>
+        }
+        else
+        {
+            <button class="btn btn-outline-secondary px-3 py-0" name="PageIndex" hidden>
+                <i class="fa fa-chevron-right"></i>
+            </button>
+        }
+    </div>
+</section>
+
+<script>
+    var userPageIndex = @PageIndex;
+    var AjaxReq;
+    var deleteTableId;
+    var sortOrder = "@sortOrder";  // Persist the sortOrder value
+
+    function GetFilteredUsers() {
+        var SearchString = $("#searchString").val();
+        var pageSize = $("#userPageSize").val();
+
+        if (AjaxReq && AjaxReq.readyState !== 4)
+            AjaxReq.abort();
+
+        AjaxReq = $.ajax({
+            url: "/User/GetUsers",
+            type: "GET",
+            data: {
+                pageIndex: userPageIndex,
+                pageSize: pageSize,
+                searchString: SearchString,
+                sortOrder: sortOrder  // Pass sortOrder consistently
+            },
+            success: function (data) {
+                $("#userListContainer").html(data);
+            }
+        })
+    }
+
+    $('#userPageSize').change(function () {
+        userPageIndex = 1;
+        GetFilteredUsers();
+    });
+
+    $('#searchString').keyup(function () {
+        clearTimeout(debounceTimer);
+        userPageIndex = 1;
+        debounceTimer = setTimeout(() => {
+            GetFilteredUsers();
+        }, 400);
+    });
+
+    $("#PreviousUsers").click(function () {
+        if (userPageIndex > 1) {
+            userPageIndex -= 1;
+            GetFilteredUsers();  // Call with updated userPageIndex
+        }
+    });
+
+    $('#NextUser').click(function () {
+        userPageIndex += 1;
+        GetFilteredUsers();  // Call with updated userPageIndex
+    });
+
+    $(document).on('click', '.sort-link', function (e) {
+        e.preventDefault();
+        sortOrder = $(this).data('sort');  // Update sortOrder
+        userPageIndex = 1;                 // Reset to first page
+        GetFilteredUsers();
+    });
+</script>

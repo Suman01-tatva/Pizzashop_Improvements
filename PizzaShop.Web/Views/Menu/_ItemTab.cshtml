@@ -1,0 +1,160 @@
+@model PizzaShop.Entity.ViewModels.ItemTabViewModel
+@inject IHttpContextAccessor Accessor;
+@using Newtonsoft.Json;
+@using PizzaShop.Entity.ViewModels;
+@{
+    var permission =
+    JsonConvert.DeserializeObject<List<RolePermissionViewModel>>(Accessor.HttpContext!.Session.GetString("permission")!);
+}
+<section>
+    <div class="row mx-0">
+        <aside class="col-md-3 left-section" style="background-color: #f5f5f5">
+            <!-- Category header -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center p-2">
+                <h5>Categories</h5>
+                <button class="outline-btn py-1 px-2 d-@(permission![2].CanEdit == false ? "none" : "")"
+                    id="addCategory">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+            <!-- Category list -->
+            <div id="categoryList">
+                <partial name="_CategoryList" model="Model.categoryList" />
+            </div>
+        </aside>
+        <div class="col-md-9 border-start border-primary bg-white">
+            <div>
+                <!-- Item header -->
+                <h5 class="p-2 mb-0 text-blue">Items</h5>
+                <div class="d-flex justify-content-end align-items-center mb-3">
+                    <div class="form-input-div d-flex justify-content-between mx-3 position-relative">
+                        <input type="text" placeholder="Search" class="form-control p-2 d-sm-block " name="search"
+                            minlength="5" required id="searchString" />
+                        <span class="form-input-icon position-absolute search-icon"><i class="fa-solid fa-search"
+                                id="eye-icon" style="color: gray"></i>
+                        </span>
+                    </div>
+                    <button class="btn btn-outline-secondary me-3 d-@(permission[2].CanDelete == false ? "none" : "")"
+                        id="multiDeleteBtn">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                    <button
+                        class="border-0 p-2 fill-btn rounded shadow add-user-btn addItemBtn add-user-btn d-@(permission[2].CanEdit == false ? "none" : "")">
+                        <span class="span2">+</span>
+                        <span class="span1"><i class="fa-solid fa-plus" style="color: white;"></i> Add Item</span>
+                    </button>
+                </div>
+
+                <!-- Items Table -->
+                <div id="itemList">
+                    <partial name="_ItemListPartial" model="Model" />
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+<script>
+    var pageIndex = @Model.PageIndex;
+
+    $(".addItemBtn").click(function () {
+        $.get('@Url.Action("AddItem", "Menu")', function (data) {
+            $("#AddItemPartial").html(data);
+            $("#addItemModal").removeData('data.bs.modal');
+            $("#addItemModal").modal('show');
+        })
+    });
+
+    $(".itemCategory").first().addClass("active-new");
+    $(".itemCategory").click(function () {
+        $(".itemCategory").removeClass("active-new");
+        $(this).addClass("active-new");
+    });
+
+    $("#addCategory").click(function () {
+        $.ajax({
+            url: '/Menu/AddEditCategory',
+            type: 'GET',
+            data: { id: null },
+            success: function (response) {
+                $("#addEditCategoryContainer").html(response);
+                $("#addCategoryModal").modal('show');
+            }
+        })
+
+    });
+    $(document).ready(function () {
+
+        $(document).on('click', '.delete-category', function () {
+            categoryIdToDelete = $(this).data("id");
+            $('#deleteCategoryModal').modal('show');
+        });
+
+        var pageIndex = @Model.PageIndex;
+
+        function GetFilteredItems() {
+            var SearchString = $("#searchString").val();
+            var pageSize = $("#pageSizedropdown").val();
+            if (ajaxRequest && ajaxRequest.readyState !== 4) {
+                ajaxRequest.abort();
+            }
+            ajaxRequest = $.ajax({
+                url: "/Menu/GetItemsByCategory",
+                type: "GET",
+                data: {
+                    categoryId: categoryId,
+                    pageIndex: pageIndex,
+                    pageSize: pageSize,
+                    searchString: SearchString
+                },
+                success: function (data) {
+                    $("#itemList").html(data);
+                }
+            })
+        }
+
+        $('#confirmDeleteCategoryItemBtn').click(function () {
+            $.ajax({
+                type: "POST",
+                url: '/Menu/DeleteCategory',
+                data: { id: categoryIdToDelete },
+                success: function (response) {
+                    if (response.success) {
+                        $('#deleteCategoryModal').modal('hide');
+                        GetFilteredCategory();
+                        categoryId = @Model.categoryList.First().Id;
+                        GetFilteredItems();
+                        toastr.success(response.message);
+                    } else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    toastr.error("An error occurred while deleting the category. Please try again.");
+                }
+            });
+        });
+    });
+
+    function GetFilteredCategory() {
+        $.ajax({
+            url: "/Menu/GetAllCategory",
+            type: "GET",
+            data: {},
+            success: function (data) {
+                $("#categoryList").html(data);
+            }
+        })
+    }
+
+    $('#multiDeleteBtn').click(function () {
+        if (deleteItemIds.length == 0) {
+            toastr.warning("Select at Least One Item");
+        } else {
+            $('#deleteMultipleItemModal').modal('show');
+        }
+    })
+</script>

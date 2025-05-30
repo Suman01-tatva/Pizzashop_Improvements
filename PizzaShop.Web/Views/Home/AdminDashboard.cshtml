@@ -1,0 +1,158 @@
+@{
+    ViewData["Title"] = "AdminDashboard";
+}
+@model PizzaShop.Entity.ViewModels.DashboardViewModel;
+
+<div class="dashboard-title d-flex justify-content-between">
+    <div>
+        <h2 class="text-center">Dashboard</h2>
+    </div>
+    <div><select class="form-select form-select-md mb-3" aria-label=".form-select-lg example" id="timePeriod">
+            <option value="" hidden>Select Status</option>
+            <option value="This Year">Current Year</option>
+            <option value="Current Month">Current Month</option>
+            <option selected value="Last 30 days">Last 30 days</option>
+            <option value="Last 7 days">Last 7 days</option>
+            <option value="Today">Today</option>
+            <option value="Custom Date">Custom Date</option>
+        </select></div>
+</div>
+
+<div id="dashboardContainer">
+    <partial name="_DashboardContent" model="@Model" />
+</div>
+
+<!-- Date Range Modal -->
+<div class="modal fade" id="dateRangeModal" tabindex="-1" role="dialog" aria-labelledby="dateRangeModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="dateRangeModalLabel" style="color:grey;"><b>Select Date Range</b></h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+            </div>
+            <div class="modal-body d-flex justify-content-center align-items-center">
+                <div class="form-floating col-6 p-2">
+                    <input type="date" class="form-control" id="fromDate"
+                        style="border:1px solid #d3d3d3; border-radius: 5px;" "required>
+                    <label  for=" startDate" class="mt-2 mx-1">Start Date</label>
+                </div>
+                <div class="form-floating col-6 p-2">
+                    <input type="date" class="form-control" id="toDate"
+                        style="border:1px solid #d3d3d3; border-radius: 5px;" required>
+                    <label for="endDate" class="mt-2 mx-1">End Date</label>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-center border-0">
+                <button type="button" class="fill-btn" id="submitDateRange">Submit</button>
+                <button type="button" class="outline-btn" data-bs-dismiss="modal" id="closeDateRange">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        var message = '@Html.Raw(TempData["ToastrMessage"])';
+        var type = '@Html.Raw(TempData["ToastrType"])';
+        if (message.trim() !== '') {
+            switch (type) {
+                case 'success':
+                    toastr.success(message)
+                    break;
+                case 'error':
+                    toastr.error(message)
+                    break;
+                case 'warning':
+                    toastr.warning(message)
+                    break;
+                case 'info':
+                    toastr.info(message)
+            }
+        }
+    });
+
+    const today = new Date().toISOString().split('T')[0];
+
+    document.getElementById("fromDate").setAttribute("max", today);
+    document.getElementById("toDate").setAttribute("max", today);
+
+    $(document).on('change', '#timePeriod', function () {
+        var timeRanges = $(this).val();
+        if (timeRanges == "Custom Date") {
+            $('#fromDate').val('');
+            $('#toDate').val('');
+            $('#dateRangeModal').modal('show');
+            console.log("Open");
+            return;
+        }
+        console.log("Other date")
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("GetDashboardData", "Home")',
+            data: { timePeriod: timeRanges, startDate: null, endDate: null },
+            success: function (response) {
+                if (response != null) {
+                    $('#dashboardContainer').html(response);
+                    GetRevenueDetails();
+                    GetCustomerGrowth();
+                    console.log(response);
+                } else {
+                    toastr.error("Error While Filter the Dashboard Data");
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error(error);
+            }
+        });
+    });
+
+    $("#fromDate").change(function () {
+        const fromDate = $(this).val();
+        document.getElementById("toDate").setAttribute("min", fromDate);
+        document.getElementById("toDate").setAttribute("max", today);
+    });
+
+    $("#toDate").change(function () {
+        const toDate = $(this).val();
+        document.getElementById("fromDate").setAttribute("max", toDate);
+        document.getElementById("fromDate").setAttribute("max", today);
+    });
+
+    $(document).on('click', '#submitDateRange', function () {
+        var timeRanges = "Custom Date";
+        var starDate = $('#fromDate').val();
+        var endDate = $('#toDate').val();
+
+        if (!starDate || !endDate) {
+            toastr.warning("Please select both start and end dates.");
+            return;
+        }
+
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("GetDashboardData", "Home")',
+            data: {
+                timePeriod: timeRanges,
+                startDate: starDate,
+                endDate: endDate
+            },
+            success: function (response) {
+                console.log(response)
+                if (response != null) {
+                    console.log("success")
+                    $('#dashboardContainer').html(response);
+                    $('#dateRangeModal').modal('hide');
+                    GetRevenueDetails();
+                    GetCustomerGrowth();
+                } else {
+                    toastr.error("Error while filtering the dashboard data");
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error(error);
+            }
+        });
+    });
+</script>

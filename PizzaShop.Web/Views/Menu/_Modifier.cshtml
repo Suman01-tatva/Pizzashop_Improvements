@@ -1,0 +1,325 @@
+@model PizzaShop.Entity.ViewModels.ModifierTabViewModel;
+@inject IHttpContextAccessor Accessor;
+@using Newtonsoft.Json;
+@using PizzaShop.Entity.ViewModels;
+@{
+    var PageSize = Model.PageSize;
+    var PageIndex = Model.PageIndex;
+    var TotalPage = Model.TotalPage;
+    var SearchString = Model.SearchString;
+    var TotalItems = Model.TotalItems;
+       var permission =
+    JsonConvert.DeserializeObject<List<RolePermissionViewModel>>(Accessor.HttpContext!.Session.GetString("permission")!);
+}
+
+<section class="table-responsive">
+    <table class="table modifier-table mb-0">
+        <thead>
+            <tr>
+                <th scope="col">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="selectAllModifiers" />
+                    </div>
+                </th>
+                <th scope="col">Name</th>
+                <th scope="col">Unit</th>
+                <th scope="col">Rate</th>
+                <th scope="col">Quantity</th>
+                <th scope="col" class="d-@((permission![2].CanEdit == false && permission[2].CanDelete == false) ? "none" : "")">Action</th>
+            </tr>
+        </thead>
+        <tbody class="table-group-devider">
+            @if (Model.modifier!.Count == 0)
+            {
+               <tr>
+                    <td colspan="6" class="text-center">
+                        <img src="~/images/empty-items.jpg" alt="Not Found" class="center-image">
+                    </td>
+                </tr>
+            }
+    else{
+@foreach (var modifier in Model.modifier)
+{
+                <tr>
+                    <td>
+                        <div class="form-check">
+                            <input class="form-check-input modifier-checkbox" type="checkbox" value="@modifier.Id" id="flexCheckDefault" />
+                        </div>
+                    </td>
+                    <td class="">@modifier.Name</td>
+                    <td>@modifier.UnitName</td>
+                    <td>@modifier.Rate</td>
+                    <td>@modifier.Quantity</td>
+                    <td class="d-@((permission[2].CanEdit == false && permission[2].CanDelete == false) ? "none" : "")">
+                        <button type="button" class="btn border-0 p-0 me-4 editModifierBtn d-@(permission[2].CanEdit == false ? "none" : "")" data-id="@modifier.Id"
+                            data-bs-toggle="modal">
+                            <i class="fa-solid fa-pen-clip"></i>
+                        </button>
+                        <button type="button" class="btn border-0 p-0 deleteModifierBtn d-@(permission[2].CanDelete == false ? "none" : "")" data-bs-toggle="modal" data-id="@modifier.Id"
+                            data-bs-target="#deleteModifiersModal">
+                            <i class="fa-regular fa-trash-can"></i>
+                        </button>
+                    </td>
+                </tr>
+}
+}
+</tbody>
+                    </table>
+                </section>
+            <div class="d-flex justify-content-end align-items-center mt-2">
+                <p class="mb-0">Items Per page</p>
+                <select class="ms-3 form-select w-auto" aria-label="Default select example" id="pageSizeModifiers">
+                    <option value="5" selected="@(PageSize == 5 ? true : false)">5</option>
+                    <option value="10" selected="@(PageSize == 10 ? true : false)">10</option>
+                    <option value="15" selected="@(PageSize == 15 ? true : false)">15</option>
+                </select>
+                <span class="mb-0 ms-2 me-2 d-none d-md-block" id="showing">Showing @(Math.Min(((PageIndex - 1) *
+                    PageSize) + 1,
+                    TotalItems)) -
+                    @(Math.Min(PageIndex * PageSize, TotalItems)) of @TotalItems</span>
+                @if (PageIndex > 1)
+                                {
+                <a class="bg-light border-1 bg-light mx-2 px-2 btn btn-outline-dark" name="PageIndex"
+                    id="PreviousModifiers">
+                    <i class="fa fa-chevron-left"></i>
+                </a>
+                                }
+                                else
+                {
+                    <button class="bg-light border-1 bg-light mx-2 px-2 btn btn-outline-dark" name="PageIndex" hidden>
+                        <i class="fa fa-chevron-left"></i>
+                    </button>
+                }
+
+                @if (PageIndex < TotalPage)
+                {
+                    <a class="bg-light border-1 bg-light mx-2 px-2 btn btn-outline-dark" name="PageIndex"
+                        id="NextModifiers">
+                        <i class="fa fa-chevron-right"></i>
+                    </a>
+                }
+                else
+                {
+                    <button class="bg-light border-1 bg-light mx-2 px-2 btn btn-outline-dark" name="PageIndex" hidden>
+                        <i class="fa fa-chevron-right"></i>
+                    </button>
+                }
+            </div>
+            
+            <div id="AddModifierPartial">
+            </div>
+            <div id="EditModifierPartial">
+            </div>
+            <!-- delete Modifier Modal -->
+            <div class="modal fade" id="deleteModifiersModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header border-0">
+                            <h1 class="modal-title fs-5" id="exampleModalLabel">Delete Confirmation</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="text-center">
+                            <i class="fa-solid fa-triangle-exclamation fa-2xl" style="color: #FFD43B;"></i>
+                        </div>
+                        <div class="modal-body text-center p-1">
+                            <p class="fw-bold mb-0">Are you sure you want to delete this modifier?</p>
+                        </div>
+                        <div class="modal-footer d-flex justify-content-center border-0">
+                            <button type="button" class="fill-btn" id="confirmDeleteModifierBtn">Yes</button>
+                            <button type="button" class="outline-btn" data-bs-dismiss="modal">No</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- delete Modifier Modal -->
+            <div class="modal fade" id="deleteMultipleModifierModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header border-0">
+                            <h1 class="modal-title fs-5" id="exampleModalLabel">Delete Confirmation</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="text-center">
+                            <i class="fa-solid fa-triangle-exclamation fa-2xl" style="color: #FFD43B;"></i>
+                        </div>
+                        <div class="modal-body text-center p-1">
+                            <p class="fw-bold mb-0">Are you sure you want to delete this modifiers?</p>
+                        </div>
+                        <div class="modal-footer d-flex justify-content-center border-0">
+                            <button type="button" class="fill-btn" id="confirmDeleteModifiersBtn">Yes</button>
+                            <button type="button" class="outline-btn" data-bs-dismiss="modal">No</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                var debounce;
+                var ajaxRequest;
+                var deleteItemId;
+    var deleteModifierIds = [];
+    @* $('#modifierList').on("click",".modifier-checkbox",function(){
+        var itemId = $(this).val();
+        console.log(itemId);
+        if(this.checked == true)
+        {
+            deleteModifierIds.push(parseInt(itemId));
+        }
+        else
+        {
+            deleteModifierIds = deleteModifierIds.filter(id => id != parseInt(itemId));
+        }
+    }); *@
+     $(".deleteModifierBtn").click(function(){
+        deleteItemId = $(this).data("id");
+        console.log(deleteItemId);
+        $('#deleteModifiersModal').modal('show');
+    });
+
+
+    $('#selectAllModifiers').on('change', function () {
+        const isChecked = this.checked; 
+        $('.modifier-checkbox').each(function () {
+            this.checked = isChecked; 
+            const modifierId = parseInt($(this).val());
+
+            if (isChecked && !deleteModifierIds.includes(modifierId)) {
+                deleteModifierIds.push(modifierId);
+            } else if (!isChecked) {
+                deleteModifierIds = deleteModifierIds.filter(id => id !== modifierId);
+            }
+        });
+    });
+
+    $('#modifierList').on('change', '.modifier-checkbox', function () {
+        const modifierId = parseInt($(this).val());
+
+        if (this.checked) {
+            if (!deleteModifierIds.includes(modifierId)) {
+                deleteModifierIds.push(modifierId);
+            }
+        } else {
+            deleteModifierIds = deleteModifierIds.filter(id => id !== modifierId);
+            $('#selectAllModifiers').prop('checked', false); 
+        }
+
+        const allChecked = $('.modifier-checkbox').length === $('.modifier-checkbox:checked').length;
+        $('#selectAllModifiers').prop('checked', allChecked);
+    });             
+
+
+           @* Pagination Script *@
+                    $(document).ready(function () {
+
+                        var pageIndex = @Model.PageIndex;
+
+                        function GetFilteredModifiers() {
+                            var SearchString = $("#searchModifier").val();
+                            var pageSize = $("#pageSizeModifiers").val();
+                            if (ajaxRequest && ajaxRequest.readyState !== 4) {
+                                ajaxRequest.abort();
+                            }
+                            ajaxRequest = $.ajax({
+                                url: "/Menu/GetModifiersByModifierGroup",
+                                type: "GET",
+                                data: {
+                                    modifierGroupId: modifierGroupId,
+                                    pageIndex: pageIndex,
+                                    pageSize: pageSize,
+                                    searchString: SearchString
+                                },
+                                success: function (data) {
+                                    $("#modifierList").html(data);
+                                }
+                            })
+                        }
+
+                        $('#pageSizeModifiers').change(function () {
+                            pageIndex = 1
+                            var pageSize = $(this).val();
+                            GetFilteredModifiers();
+                        })
+
+                        $('#searchModifier').keyup(function () {
+                            var value = $(this).val();
+                            console.log('SearchString',value)
+                            clearTimeout(debounce);
+                            pageIndex = 1
+                            pageSize = @Model.PageSize;
+                            debounce = setTimeout(() => {
+                                GetFilteredModifiers();
+                            }, 600)
+                        })
+
+                        $("#PreviousModifiers").click(function () {
+                            pageIndex -= 1;
+                            GetFilteredModifiers()
+                        })
+
+                        $('#NextModifiers').click(function () {
+                            $("#PreviousBtn").attr('disabled', false)
+                            pageIndex += 1;
+                            GetFilteredModifiers()
+                        })
+
+                        $('#confirmDeleteModifierBtn').click(function(){
+                            $.ajax({
+                                url: '/Menu/DeleteModifier',
+                                type: 'post',
+                                data: {id:deleteItemId},
+                                success:function(response){
+                                if (response == null)
+                                        window.location.href = "/Auth/Login";
+                                    if (response.isSuccess) {
+                                        GetFilteredModifiers();
+                                        toastr.success(response.message);
+                                        $("#deleteModifiersModal").modal('hide');
+                                        $(".modal-backdrop").remove();
+                                    } else {
+                                        toastr.error(response.message);
+                                    }
+                                }
+                            });
+                        })
+
+                    });
+                    
+    $(".editModifierBtn").click(function () {
+        var modifierId = $(this).data("id");
+        console.log("ModifierId", modifierId);
+        $.ajax({
+            url: '/Menu/EditModifier',
+            type: 'GET',
+            data: { id: modifierId },
+            success: function (response) {
+                console.log("Modifier edited", response);
+                $("#EditModifierPartial").html(response);
+                $("#editModifierModal").modal('show');
+            }
+        });
+    });
+
+    $('#confirmDeleteModifiersBtn').click(function () {
+        $.ajax({
+            url: "/Menu/DeleteMultipleModifier",
+            type: 'POST',
+            data: {
+                modifierIds: deleteModifierIds
+            },
+            success: function (response) {
+                if (response == null)
+                    window.location.href = "/Auth/Login"
+                if (response.isSuccess) {
+                    GetFilteredModifiers();
+                    toastr.success(response.message);
+                    $("#deleteMultipleModifierModal").modal('hide');
+                } else {
+                    toastr.error(response.message);
+                }
+            }
+        })
+    })
+    </script>

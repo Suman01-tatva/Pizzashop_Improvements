@@ -1,0 +1,114 @@
+@model PizzaShop.Entity.ViewModels.KotTableDetailViewModel;
+
+<!-- Mark as prepared Modal -->
+<div class="modal fade" id="MarkAsProgressModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h2 class="modal-title fs-5" id="exampleModalLabel">
+                    Order ID: #@Model.orderNo
+                </h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-1">
+                @* <form> *@
+                <section class="table-responsive">
+                    <table class="table user-table mb-0" style="--bs-table-border-color: white;">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <div class="d-flex justify-content-start ms-5">Item</div>
+                                </th>
+                                <th>
+                                    Quantity
+                                </th>
+                            </tr>
+                        </thead>
+                        <hr>
+                        <tbody class="">
+
+                            @if (@Model.OrderedItems!.Count() == 0)
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center text-secondary">No Items</td>
+                                </tr>
+                            }
+                            @foreach (var c in @Model.OrderedItems!)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="row">
+                                            <div class="col-12 d-flex flex-column justify-content-start">
+                                                <span class="text-start">
+                                                    <input type="checkbox" class="me-4 item-checkbox"
+                                                        data-id="@c.OrderItemId">@c.ItemName</span>
+                                                <span class="ms-4">
+                                                    <ul>
+                                                        @foreach (var m in c.ModifierList!)
+                                                        {
+                                                            <li class="text-start">@m.Name</li>
+                                                        }
+                                                    </ul>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-left" style="display: flex; justify-content: center; padding: 40px;">
+                                        <div class="d-flex justify-content-end" style="border: 2px solid #026fad;">
+                                            <button class="decrement quantity-btn px-0">&minus;</button>
+                                            @if (Model.status == 3)
+                                            {
+                                                <input type="number" class="quantity-input" value="1"
+                                                    max="@c.Quantity" min="1">
+                                            }
+                                            else
+                                            {
+                                                <input type="number" class="quantity-input" value="1"
+                                                    max="@c.ReadyItemQuantity" min="1">
+                                            }
+                                            <button class="increment quantity-btn">&plus;</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </section>
+
+                <div class="modal-footer d-flex justify-content-center border-0">
+                    @if (Model.status == 2)
+                    {
+                        <button type="button" id="markInProgress" class="fill-btn">Mark As InProgress</button>
+                    }
+                    else
+                    {
+                        <button type="button" id="prepared" class="fill-btn">Mark As Prepared</button>
+                    }
+                    <button type="button" class="border-btn" data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var preparedItems = [];
+    var inProgressItems = [];
+    $(".increment").click(function () {
+        var input = $(this).parent().find(".quantity-input");
+        var max = parseInt(input.attr("max"));
+        var value = parseInt(input.val());
+        var increased = Math.min(value + 1, max);
+        input.val(increased);
+    });
+
+    $(".decrement").click(function () {
+        var input = $(this).parent().find(".quantity-input");
+        var min = parseInt(input.attr("min"));
+        var value = parseInt(input.val());
+        var decreased = Math.max(value - 1, min);
+        input.val(decreased);
+    });
+</script>

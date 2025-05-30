@@ -1,0 +1,126 @@
+@model PizzaShop.Entity.ViewModels.AddEditModifierViewModel;
+<partial name="_ValidationScriptsPartial" />
+
+<!-- Add New Modifier Modal -->
+<div class="modal fade" id="editModifierModal" tabindex="-1" aria-labelledby="addModifierModalLabel" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="addModifierModalLabel">Edit Modifier</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editModifierForm" asp-controller="Menu" asp-action="AddModifier">
+                    <div class="row">
+                        <input type="hidden" name="Id" asp-for="Id" value="@Model.Id">
+                        <!-- Modifier Group Selection -->
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                <select class="form-select" id="modifierGroup" asp-for="Modifiergroupid"
+                                    name="Modifiergroupid">
+                                    <option selected disabled> Select Modifier Group --</option>
+                                    @foreach (var m in Model.ModifierGroups!)
+                                    {
+                                        <option value="@m.Id">@m.Name</option>
+                                    }
+                                </select>
+                                <label for="modifierGroup">Select Modifier Group(s)</label>
+                                <span class="text-danger font-italic" asp-validation-for="Modifiergroupid"></span>
+                            </div>
+                        </div>
+                        <!-- Name Input -->
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="modifierName" asp-for="Name" name="Name">
+                                <label for="modifierName">Name*</label>
+                                <span class="text-danger font-italic" asp-validation-for="Name"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Rate Input -->
+                        <div class="col-md-4 mb-3">
+                            <div class="form-floating">
+                                <input type="number" class="form-control" id="modifierRate" asp-for="Rate" name="Rate">
+                                <label for="modifierRate">Rate*</label>
+                                <span class="text-danger font-italic" asp-validation-for="Rate"></span>
+                            </div>
+                        </div>
+                        <!-- Quantity Input -->
+                        <div class="col-md-4 mb-3">
+                            <div class="form-floating">
+                                <input type="number" class="form-control" id="modifierQuantity" asp-for="Quantity"
+                                    name="Quantity">
+                                <label for="modifierQuantity">Quantity*</label>
+                                <span class="text-danger font-italic" asp-validation-for="Quantity"></span>
+                            </div>
+                        </div>
+                        <!-- Unit Selection -->
+                        <div class="col-md-4 mb-3">
+                            <div class="form-floating">
+                                <select class="form-select" id="addModifierUnits" asp-for="UnitId" name="Unitid">
+                                    <option selected disabled>-- Select a unit --</option>
+                                    @foreach (var u in Model.Units!)
+                                    {
+                                        <option value="@u.Id">@u.Name</option>
+                                    }
+                                </select>
+                                <label for="addModifierUnits">Unit*</label>
+                                <span class="text-danger font-italic" asp-validation-for="UnitId"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Description Input -->
+                    <div class="mb-3">
+                        <div class="form-floating">
+                            <textarea class="form-control" id="modifierDescription" asp-for="Description"
+                                name="Description" rows="2"></textarea>
+                            <label for="modifierDescription">Description</label>
+                            <span class="text-danger font-italic" asp-validation-for="Description"></span>
+                        </div>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="fill-btn me-2" id="saveAddModifierBtn">Save</button>
+                        <button type="button" class="outline-btn" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $("#editModifierModal").submit(function (event) {
+        event.preventDefault();
+        var form = $("#editModifierForm")[0];
+        var formData = new FormData(form);
+
+        $.ajax({
+            url: '/Menu/EditModifier',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                if (response.isAuthenticate == false)
+                    navigateToLogin();
+                if (response.isSuccess) {
+                    toastr.success(response.message);
+                    $("#editModifierModal").modal('hide');
+                    modifierGrpId = @Model.Modifiergroupid
+                        GetFilteredModifiers();
+                } else {
+                    toastr.error(response.message);
+                }
+            },
+            error: function (error) {
+                toastr.error(error.message)
+            }
+        })
+    })
+
+</script>

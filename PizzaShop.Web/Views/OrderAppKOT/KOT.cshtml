@@ -1,0 +1,192 @@
+@model PizzaShop.Entity.ViewModels.KotViewModel;
+@{
+    ViewData["Title"] = "KOT";
+    Layout = "~/Views/Shared/_OrderAppLayout.cshtml";
+}
+<h1 class="page-title">KOT</h1>
+
+<div>
+    <nav class="p-2 bg-white shadow p-3 mb-4 bg-white rounded">
+        <div class="nav nav-underline scrollable-list" id="nav-tab" role="tablist">
+            <button class="nav-link active tab-link pe-1 scrollable-list-item category" data-id="" data-name="All" id="nav-item-tab"
+                data-bs-toggle="tab" data-bs-target="#nav-item" type="button" role="tab" aria-controls="nav-item"
+                aria-selected="true">
+                <span class="mx-2">All</span>
+            </button>
+            @foreach (var i in Model.Categories!)
+            {
+                <button class="nav-link tab-link pe-1 scrollable-list-item category" data-id="@i.Id" data-name="@i.Name" id="@i.Id"
+                    data-bs-toggle="tab" data-bs-target="#nav-item" type="button" role="tab" aria-controls="nav-item"
+                    aria-selected="true">
+                    <span class="mx-2">@i.Name</span>
+                </button>
+            }
+        </div>
+    </nav>
+</div>
+
+<div class="tab-content shadow p-3 mb-4 bg-white rounded" id="nav-tabContent">
+    <section class="tab-pane fade show active mt-2" id="nav-item" role="tabpanel" aria-labelledby="nav-item-tab">
+        <div class="d-flex row mb-3 mx-2">
+            <h2 class="col-sm-3 card-heading">All</h2>
+            <div class="col-sm-9 d-flex justify-content-end gap-2 p-0">
+                <button class="status1 border-btn active-status" style="width: auto;" id="inProgress" data-status="3">InProgress</button>
+                <button class="status2 border-btn" data-status="2" style="width: auto;" id="ready">Ready</button>
+                @* <a class="outline-btn p-2 border-2" name="PageIndex" id="Previous">
+                    <i class="fa fa-chevron-left"></i>
+                </a>
+                <a class="outline-btn p-2 border-2" name="PageIndex" id="Next">
+                    <i class="fa fa-chevron-right"></i>
+                </a> *@
+            </div>
+        </div>
+         <div id="kotTables" class="scrollable-container">
+            <partial name="_KotTables" model="Model.TableDetails" />
+        </div>
+    </section>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+<script>
+    $(document).ready(function () {
+        var categoryId;
+        var status = 3;
+        var categoryName = "All";
+
+        function GetFileteredKotTables()
+        {
+            $.ajax({
+                url: '/OrderAppKot/GetTables',
+                type: 'GET',
+                data: { id: categoryId, status: status },
+                success: function (response) {
+                    $("#kotTables").html(response);
+                    console.log("kotdetails")
+                },
+                error: function (xhr, status, error) {
+                    toastr.error("An error occurred while fetching the tables.Please try again.");
+                }
+            });
+        }
+
+ const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/kotHub")
+        .build();
+
+    connection.on("ReceiveKotUpdate", function () {
+        console.log("getdetails")
+        GetFileteredKotTables();
+    });
+
+    connection.start().catch(function (err) {
+        return console.error(err.toString());
+    });
+
+        $('.category').click(function () {
+            categoryId = $(this).data("id");
+            categoryName = $(this).data("name");
+            status = $('.status').data("status");
+            $('.card-heading').html(categoryName);
+            console.log("status",status)
+             console.log("category",categoryId)
+            GetFileteredKotTables();
+        });
+        $('.status1').click(function () {
+            status = $(this).data("status");
+            $('.card-heading').html(categoryName);
+             console.log("status",status)
+             console.log("category",categoryId)
+              $("#inProgress").addClass('active-status');
+                $("#ready").removeClass('active-status');
+            GetFileteredKotTables();
+        });
+        $('.status2').click(function () {
+            status = $(this).data("status");
+            $('.card-heading').html(categoryName);
+             console.log("status",status)
+             console.log("category",categoryId)
+                 $("#ready").addClass('active-status');
+                $("#inProgress").removeClass('active-status');
+            GetFileteredKotTables();
+        });
+
+        //Mark As Prepared
+        $(document).on('click','#prepared',
+        function () {
+        preparedItems = [];
+        $(".item-checkbox:checked").each(function () {
+            var id = $(this).data('id');
+            var quantity = parseInt($(this).closest('tr').find('.quantity-input').val());
+            console.log(quantity);
+            preparedItems.push({Id: id,Quantity: quantity});
+        });
+        console.log("PreparedItems",preparedItems);
+        $.ajax({
+            url: '/OrderAppKot/MarkAsPrepared',
+            type: 'POST',
+            data: $.param({ items: preparedItems , status: status}),
+            success: function (response) {
+                if (response.success) {
+                    toastr.success(response.message);
+                    $('#MarkAsProgressModal').modal('hide');
+                    GetFileteredKotTables();
+                } else {
+                    toastr.error(response.message);
+                }
+            },
+            error: handleAjaxError
+        });
+    });
+
+    $(document).on('click','#markInProgress',
+        function () {
+            inProgressItems = [];
+            console.log("Click")
+            $(".item-checkbox:checked").each(function () {
+                var id = $(this).data('id');
+                @* var quantiry = $('.quantity-input').val(); *@
+                var quantity = parseInt($(this).closest('tr').find('.quantity-input').val());
+                inProgressItems.push({Id: id,Quantity: quantity});
+            });
+            console.log("inprogressArray", inProgressItems);
+            $.ajax({
+                url: '/OrderAppKot/MarkAsPrepared',
+                type: 'POST',
+                data: $.param({ inProgressItems: inProgressItems , status: status}),
+                success: function (response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        $('#MarkAsProgressModal').modal('hide');
+                        GetFileteredKotTables();
+                    } else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: handleAjaxError
+            });
+        }
+    );
+
+const kotCardList = document.querySelector('.kot-card-list');
+const prevBtn = document.getElementById('Previous');
+const nextBtn = document.getElementById('Next');
+var pageWidth = window.innerWidth;
+var cardWidth = 300 + 30;
+if(pageWidth <= 325)
+{
+    cardWidth = 200 + 10;
+}
+@* cardWidth = 320 + 30; // width + gap *@
+@* 
+nextBtn.addEventListener('click', () => {
+    kotCardList.scrollBy({ left: cardWidth, behavior: 'smooth' });
+});
+
+prevBtn.addEventListener('click', () => {
+    kotCardList.scrollBy({ left: -cardWidth, behavior: 'smooth' });
+}); *@
+
+
+    });
+
+
+</script>

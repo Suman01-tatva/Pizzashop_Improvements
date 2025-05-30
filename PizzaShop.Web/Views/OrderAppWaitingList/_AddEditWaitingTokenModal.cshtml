@@ -1,0 +1,154 @@
+@model PizzaShop.Entity.ViewModels.AddEditWatingTokenViewModel;
+<partial name="_ValidationScriptsPartial" />
+
+<div class="container mt-5">
+    <div class="modal fade" id="addEditWaitingListModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">@(Model.Id == null ? "Waiting Token Details" : "Waiting Token Details")</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-1">
+                    <form class="p-3" id="WaitingTokenForm" data-id="@Model.Id">
+                        <input type="number" asp-for="Id" hidden>
+                        <input type="number" asp-for="CustomerId" hidden>
+                        <div class="row">
+                            <div class="form-floating  p-0 col">
+                                <input asp-for="Email" type="text" class="form-control" id="searchCustomer"
+                                    placeholder="Email" readonly=@(Model.Id != null) autocomplete="off" />
+                                <label for="Email">Email*</label>
+                                <ul id="customerList" class="customer-suggestion-list">
+
+                                </ul>
+                                <span asp-validation-for="Email" class="text-danger ms-1 emailValidation"></span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-floating  p-0 col">
+                                <input asp-for="Name" type="text" id="customerName" class="form-control"
+                                    placeholder="Name" />
+                                <label for="Name">Name*</label>
+                                <span asp-validation-for="Name" class="text-danger ms-1"></span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-floating  p-0 col">
+                                <input asp-for="MobileNumber" type="number" id="customerPhone" class="form-control"
+                                    placeholder="Name" />
+                                <label for="Name">Mobile Number*</label>
+                                <span asp-validation-for="MobileNumber" class="text-danger ms-1"></span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-floating p-0 col">
+                                <input asp-for="NoOfPersons" type="number" class="form-control" placeholder="Capacity">
+                                <label for="Capacity">No of Person*</label>
+                                <span asp-validation-for="NoOfPersons" class="text-danger ms-1"></span>
+                            </div>
+                            <div class="col">
+                                <div class="form-floating">
+                                    <select asp-for="SectionId" class="form-select" id="WTSectionDropDown"
+                                        aria-label="Floating label select example">
+                                        <option selected disabled hidden>Select a Section</option>
+                                        @foreach (var s in Model.SectionList)
+                                        {
+                                            <option value="@s.Id">@s.Name</option>
+                                        }
+                                    </select>
+                                    <label for="Status">Section*</label>
+                                    <span asp-validation-for="SectionId" class="text-danger ms-1"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer d-flex justify-content-end border-0">
+                            <button class="fill-btn" type="submit" id="submitWaitingTokenForm">Save</button>
+                            <button type="button" class="btn outline-btn" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    var debounceTimer;
+    $("#WaitingTokenForm").submit(function (event) {
+        event.preventDefault();
+        var form = $("#WaitingTokenForm")[0];
+        var formData = new FormData(form);
+        $.ajax({
+            url: '/OrderAppWaitingList/AddEditWaitingToken',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                if (response.isValid) {
+                    toastr.warning("Please Fill all required field");
+                    return;
+                }
+                if (response.isSuccess) {
+                    toastr.success(response.message);
+                    $("#addEditWaitingListModal").modal('hide');
+                    GetWaitingTokens();
+                    GetSections();
+                } else {
+                    toastr.error(response.message);
+                }
+            },
+            error: handleAjaxError
+        });
+    });
+
+    function searchCustomer() {
+        var emailString = $("#searchCustomer").val();
+        $.ajax({
+            url: '/OrderAppWaitingList/GetCustomerSuggestion',
+            type: 'GET',
+            data: { email: emailString },
+            success: function (response) {
+                if (response.isSuccess) {
+                    $("#customerList").empty();
+                    for (let i = 0; i < response.customerSuggestions.length; i++) {
+                        var li = $("<li></li>");
+                        var email = $("<p></p>").text(response.customerSuggestions[i].email);
+                        var name = $("<p></p>").text(response.customerSuggestions[i].name);
+                        var phone = $("<p></p>").text(response.customerSuggestions[i].phone);
+                        li.append(email, name, phone)
+                        @* li.append(name)
+                            li.append(phone) *@
+                            li.click(function () {
+                                $("#searchCustomer").val(response.customerSuggestions[i].email);
+                                $("#customerName").val(response.customerSuggestions[i].name);
+                                $("#customerPhone").val(response.customerSuggestions[i].phone);
+                                $("#customerList").empty();
+                                $("#WaitingTokenForm input[name='CustomerId']").val(response.customerSuggestions[i].id);
+                                // Clear email validation error
+                                $(".emailValidation").text("");
+                                $("#searchCustomer").removeClass("input-validation-error");
+                            });
+                        $("#customerList").append(li);
+                    }
+
+                } else {
+                    toastr.error(response.message)
+                }
+            },
+            error: function (error) {
+                toastr.error(error.message);
+            }
+        })
+
+    }
+
+    $("#searchCustomer").keyup(function () {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            searchCustomer()
+        }, 400)
+    })
+</script>

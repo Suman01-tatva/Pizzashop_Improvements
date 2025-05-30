@@ -1,0 +1,247 @@
+@model PizzaShop.Entity.ViewModels.TableSectionViewModel;
+@inject IHttpContextAccessor Accessor;
+@using Newtonsoft.Json;
+@using PizzaShop.Entity.ViewModels;
+@{
+    ViewData["Title"] = "TableSection";
+    var permission =
+    JsonConvert.DeserializeObject<List<RolePermissionViewModel>>(Accessor.HttpContext.Session.GetString("permission"));
+}
+
+@* <script src="~/lib/jquery/dist/jquery.min.js"></script> *@
+@* <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script> *@
+<div class="col-12">
+    <!-- menu header -->
+    <h1 class="title">Sections / Tables</h1>
+
+    <section>
+        <div class="row mx-0">
+            <aside class="col-md-3" style="background-color: #f5f5f5">
+                <!-- Section header -->
+                <div class="d-flex flex-wrap justify-content-between align-items-center p-2">
+                    <h5 class="section-heading">Sections</h5>
+                    <button class="fill-btn py-1 px-2 d-@(permission[3].CanEdit == false ? "none" : "")"
+                        data-bs-toggle="modal" data-bs-target="#sectionModal" onclick="openAddEditModal(0)">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+                <!-- Section list -->
+                <div id="sectionList">
+                    <partial name="_SectionList" model="Model.Sections" />
+                </div>
+            </aside>
+            <div class="col-md-9 border-start border-primary bg-white">
+                <div>
+                    <!-- Item header -->
+                    <h5 class="p-2 mb-0 section-heading">Tables</h5>
+                    <div class="d-flex justify-content-end align-items-center mb-3 ">
+                        @* itemList-header *@
+                        <div class="form-input-div d-flex justify-content-between mx-3 position-relative">
+                            <input type="text" placeholder="Search" class="form-control p-2 d-sm-block " name="search"
+                                minlength="5" required id="searchString" />
+                            <span class="form-input-icon position-absolute search-icon"><i class="fa-solid fa-search"
+                                    id="eye-icon" style="color: gray"></i>
+                            </span>
+                        </div>
+                        <button
+                            class="btn btn-outline-secondary me-3 d-@(permission[3].CanDelete == false ? "none" : "")"
+                            id="multiDeletTableBtn">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                        @* <button class="fill-btn addTableBtn d-@(permission[3].CanEdit == false ? "none" : "")">
+                            <i class="fa-solid fa-plus"></i> New Table
+                        </button> *@
+                        <button
+                            class="border-0 p-2 fill-btn rounded shadow add-user-btn addItemBtn me-3 addTableBtn d-@(permission[3].CanEdit == false ? "none" : "")">
+                            <span class="span2">+</span>
+                            <span class="span1"><i class="fa-solid fa-plus" style="color: white;"></i> Add
+                                Table</span>
+                        </button>
+                    </div>
+
+                    <!-- Items Table -->
+                    <div id="tableList">
+                        <partial name="_TableList" model="Model" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+    $(".addTableBtn").click(function () {
+        console.log("click add")
+        $.get('@Url.Action("AddNewTable", "TableSection")', function (data) {
+            console.log("Add data")
+            $("#AddTablePartial").html(data);
+            $("#addTableModal").modal('show');
+        })
+    })
+
+    $(document).on('submit', "#addNewTableForm", function (event) {
+        var tableId = $(this).data("id");
+        if (tableId == 0 || tableId == undefined) {
+            console.log("save table ID", tableId);
+            event.preventDefault();
+            var form = $("#addNewTableForm");
+            console.log("submit form", form.serialize())
+            $.ajax({
+                url: '/TableSection/AddNewTable',
+                type: 'POST',
+                data: form.serialize(),
+                success: function (response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        GetFilteredItems();
+                        $("#addTableModal").modal('hide');
+                    } else {
+                        toastr.error(response.message);
+                    }
+                }
+            })
+        }
+    })
+
+    $(document).on("click", ".editTableBtn", function () {
+        var tableId = $(this).data("id");
+        console.log("Table ", tableId);
+        $.get('@Url.Action("EditTable", "TableSection")', { id: tableId }, function (data) {
+            $("#AddTablePartial").html(data);
+            console.log(data)
+            $("#addTableModal").modal("show");
+        });
+    });
+
+    $(document).on('submit', "#addNewTableForm", function (e) {
+        var tableId = $(this).data("id");
+        console.log("Update table ID", tableId);
+        if (tableId != 0) {
+            e.preventDefault();
+            var tableId = $(this).data("id");
+            console.log("Update table ID", tableId);
+            var formData = $("#addNewTableForm").serialize();
+            IsEditTable = false;
+            $.post('@Url.Action("EditTable", "TableSection")', formData, function (response) {
+                if (response.success) {
+                    GetFilteredItems();
+                    toastr.success(response.message);
+                    $("#addTableModal").modal("hide");
+                } else {
+                    toastr.error(response.message);
+                }
+            });
+        }
+    });
+
+    @* Pagination Script *@
+    var debounce;
+    var ajaxRequest;
+
+    var pageIndex = @Model.PageIndex;
+
+    function GetFilteredItems() {
+        var SearchString = $("#searchString").val();
+        var pageSize = $("#pageSizeTable").val();
+        if (ajaxRequest && ajaxRequest.readyState !== 4) {
+            ajaxRequest.abort();
+        }
+        console.log("GetFilteredItems Item");
+        ajaxRequest = $.ajax({
+            url: "/TableSection/GetTablesBySectionId",
+            type: "GET",
+            data: {
+                sectionId: sectionId,
+                pageIndex: pageIndex,
+                pageSize: pageSize,
+                searchString: SearchString
+            },
+            success: function (data) {
+                $("#tableList").html(data);
+            }
+        })
+    }
+
+    $('#searchString').keyup(function () {
+        clearTimeout(debounce);
+        pageIndex = 1
+        pageSize = @Model.PageSize;
+        debounce = setTimeout(() => {
+            GetFilteredItems();
+        }, 600)
+    })
+
+    //AddEdit Section
+    function submitAddEditSectionForm(event) {
+        event.preventDefault();
+        var form = $(event.target);
+        $.ajax({
+            type: form.attr('method'),
+            url: form.attr('action'),
+            data: form.serialize(),
+            success: function (response) {
+                if (response.success) {
+                    $('#sectionModal').modal('hide');
+                    GetFilteredSections();
+                    toastr.success(response.message);
+                } else {
+                    toastr.error(response.message);
+                    $('#modalContent').html(response.html);
+                }
+            },
+            error: function (xhr, status, error) {
+                showErrorMessage("An error occurred. Please try again.");
+            }
+        });
+    }
+
+    $(document).on('submit', '#addEditSectionForm', submitAddEditSectionForm);
+
+    function GetFilteredSections() {
+        console.log("GetFilteredSections");
+        ajaxRequest = $.ajax({
+            url: "/TableSection/GetAllSectionsForFilter",
+            type: "GET",
+            success: function (data) {
+                $("#sectionList").html(data);
+            }
+        })
+    }
+    $('#multiDeletTableBtn').click(function () {
+        if (deleteTableIds.length == 0) {
+            toastr.warning("Select at Least One Item");
+        } else {
+            $('#deleteMultipleTableModal').modal('show');
+        }
+    });
+    $(document).on('click', '#multiDeleteTablesSubmit', function () {
+        console.log("Multidelete");
+        $.ajax({
+            url: '/TableSection/MultiDeleteTable',
+            type: 'POST',
+            data: {
+                itemIds: deleteTableIds
+            },
+            success: function (response) {
+                if (response == null) {
+                    window.location.href = "/Auth/Login";
+                    toastr.error("Your Session is Expired. Please Login Again!");
+                }
+                if (response.isSuccess) {
+                    console.log("Delete")
+                    GetFilteredItems();
+                    $("#deleteMultipleTableModal").modal('hide');
+                    toastr.success(response.message);
+                } else {
+                    toastr.error(response.message);
+                }
+            }
+        })
+    })
+
+    $(".section").first().addClass("active-new");
+    $(".section").click(function () {
+        $(".section").removeClass("active-new");
+        $(this).addClass("active-new");
+    });
+</script>

@@ -1,0 +1,118 @@
+/* .form-switch .form-check-input {
+  background-color: #d6d3d3;
+  border: #006098;
+  background-image: url(../Images/toggle-icon.svg) !important;
+  height: 20px;
+  width: 35px;
+}
+
+.form-switch .form-check-input:checked {
+  background-color: #006098;
+}
+
+body,
+html {
+  background-color: #f8f9fa;
+}
+
+add-user {
+  background-color: #0066a7;
+  color: white;
+  height: 50px;
+  width: 150px;
+  border: none;
+  border-radius: 5%;
+}
+
+#tbl {
+  background-color: #f8f9fb !important;
+} 
+
+.table {
+  --bs-table-color-type: initial;
+  --bs-table-bg-type: initial;
+  --bs-table-color-state: initial;
+  --bs-table-bg-state: initial;
+  --bs-table-color: var(--bs-emphasis-color);
+  --bs-table-bg: #f8f9fb !important;
+  --bs-table-border-color: var(--bs-border-color);
+  --bs-table-accent-bg: transparent;
+  --bs-table-striped-color: var(--bs-emphasis-color);
+  --bs-table-striped-bg: rgba(var(--bs-emphasis-color-rgb), 0.05);
+  --bs-table-active-color: var(--bs-emphasis-color);
+  --bs-table-active-bg: rgba(var(--bs-emphasis-color-rgb), 0.1);
+  --bs-table-hover-color: var(--bs-emphasis-color);
+  --bs-table-hover-bg: rgba(var(--bs-emphasis-color-rgb), 0.075);
+  width: 100%;
+  margin-bottom: 1rem;
+  vertical-align: top;
+  border-color: var(--bs-table-border-color);
+}
+
+#taxList {
+  margin-top: 15px;
+  box-shadow: -1px 9px 20px 0px #cbc4c4;
+  background-color: #f8f9fa;
+}
+
+.table {
+  --bs-table-color: #4a4a4a;
+}
+.table th,
+.table td {
+  vertical-align: middle;
+}
+
+.row {
+  --bs-gutter-x: 0.5rem;
+  --bs-gutter-y: 0.5rem;
+}
+
+.form-floating > label {
+  padding: 1rem 0.25rem;
+}
+
+.form-switch {
+  padding-left: 2.5em;
+} */
+/* @media (max-width: 576px) {
+  #searchTaxInput {
+    width: 150px !important;
+  }
+} */
+
+.tablsec-header {
+  display: flex;
+  justify-content: space-between;
+}
+@media (max-width: 493px) {
+  .tablsec-header {
+    display: flex;
+    flex-wrap: wrap !important;
+  }
+  .tablsec-header .filters {
+    justify-content: center !important;
+  }
+}
+
+/* customer */
+.customer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+@media (max-width: 696px) {
+  .customer-header {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .customer-filter {
+    margin-bottom: 20px;
+    justify-content: space-between !important;
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .customer-items {
+    width: 100%;
+  }
+}

@@ -1,0 +1,82 @@
+@model PizzaShop.Entity.ViewModels.AddEditCategoryViewModel;
+<partial name="_ValidationScriptsPartial" />
+
+<!-- Add Category Modal -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">
+                    @((Model.Id != null) ? "Edit" : "Add") Category
+                </h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-1">
+                <form class="p-3" id="addEditCategoryForm">
+                    <input type="hidden" name="Id" asp-for="Id">
+                    <div class="form-floating mb-3 p-0">
+                        <input type="text" class="form-control" id="Name" placeholder="Category" asp-for="Name" />
+                        <label for="Name">Name*</label>
+                        <span class="text-danger ms-2" asp-validation-for="Name"></span>
+                    </div>
+
+                    <div class="form-floating p-0">
+                        <textarea class="form-control" placeholder="Description" id="Description"
+                            asp-for="Description"></textarea>
+                        <label for="Description">Description</label>
+                        <span class="text-danger ms-2" asp-validation-for="Description"></span>
+                    </div>
+                    <div class="modal-footer d-flex justify-content-end border-0">
+                        <button type="submit" class="fill-btn">
+                            Save
+                        </button>
+                        <button type="button" class="outline-btn" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $("#addEditCategoryForm").submit(function (event) {
+        event.preventDefault();
+        var form = $("#addEditCategoryForm")[0];
+        var formData = new FormData(form);
+
+        $.ajax({
+            url: '/Menu/AddEditCategory',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: async function (response) {
+                if (response.isValid == false)
+                    return;
+                if (response.isExist) {
+                    toastr.error(response.message);
+                }
+                if (response.isSuccess) {
+                    toastr.success(response.message);
+                    $("#addCategoryModal").modal('hide');
+                    GetFilteredCategory();
+
+                    @* var cId = @Model.Id;
+                    $(".itemCategory").removeClass("active-new");
+                    $(".itemCategory").map(function () {
+                        if ($(this).data('id') == cId) {
+                            console.log(cId)
+                            console.log($(this).data('id'))
+                            $(this).addClass("active-new");
+                        }
+                    }) *@
+                }
+            },
+            error: function (error) {
+                toastr.error(error.message)
+            }
+        })
+    })
+</script>

@@ -1,0 +1,66 @@
+@{
+    ViewData["Title"] = "Login Page";
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+}
+
+@model PizzaShop.Entity.ViewModels.LoginViewModel;
+
+<div class="m-auto col-md-8 login-container">
+    <div class="d-flex flex-row justify-content-center align-item-center mb-5 fs-3 mt-5">
+        <img src="images/pizzashop_logo.png" alt="pizashop-logo" class="img-fliud pizza-logo" />
+        <div class="brand-name mt-1"><b>PIZZASHOP</b></div>
+    </div>
+    <h4>Welcome,</h4>
+    <form asp-action="Login" asp-controller="Auth" class="mb-5 needs-validation mt-4" id="loginForm" novalidate>
+        <div class="d-flex mb-3">
+            <input asp-for="Email" type="email" class="form-control input-lg" id="email" aria-describedby="emailHelp"
+                placeholder="Email*" />
+            <i class="fa-solid fa-user login-icon"></i>
+        </div>
+        <span asp-validation-for="Email" class="text-danger mb-3"></span>
+
+        <div class="d-flex mb-3 mt-3">
+            <input asp-for="Password" type="password" id="password" class="form-control input-psw input-lg"
+                placeholder="Enter Password*" title="Please enter valid password" is-valid>
+            <i class="fas fa-eye login-icon" onclick="togglePassword('password', this)"></i>
+        </div>
+        <span for="password" asp-validation-for="Password" class="text-danger mb-3"></span>
+
+        <div class="d-flex justify-content-between align-items-center my-4 ">
+            <div>
+                <input asp-for="RememberMe" type="checkbox" class="form-check-input" id="exampleCheck1" />
+                <label asp-for="RememberMe" class="form-check-label" for="exampleCheck1">Remember me</label>
+            </div>
+            <a id="ForgotPassword">Forgot Password?</a>
+        </div>
+        <span asp-validation-for="RememberMe" class="text-danger mb-3"></span>
+        <button type="submit" value="Login" class="fill-btn border-0 col-12 p-1">
+            Login
+        </button>
+        <div class="mt-3">
+            @if (ViewData.ModelState["InvalidCredentials"] != null)
+            {
+                <span
+                    class="text-danger">@ViewData.ModelState["InvalidCredentials"].Errors.FirstOrDefault()?.ErrorMessage</span>
+            }
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        <partial name="_ValidationScriptsPartial" />
+    }
+    <script>
+        $("#ForgotPassword").click(function () {
+            let email = $("#email").val();
+            console.log(email)
+            if (email) {
+                window.location.href = "/Auth/ForgotPassword?email=" + email;
+            }
+            else {
+                toastr.warning("Please Enter the Email")
+            }
+        })
+    </script>
+}

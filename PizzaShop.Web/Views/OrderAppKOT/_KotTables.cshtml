@@ -1,0 +1,119 @@
+@model List<PizzaShop.Entity.ViewModels.KotTableDetailViewModel>
+
+@if (Model.Count() == 0)
+{
+    <h4 class="d-flex align-items-center justify-content-center textBlue">
+        <img src="~/images/no-orders.jpg" alt="Not Found" class="center-image">
+    </h4>
+}
+else
+{
+    <div class="kot-card-list mx-3">
+        @foreach (var i in Model)
+        {
+            <div class="kot-card order" data-id='@Html.Raw(Json.Serialize(i))'>
+                <section class="card-header">
+                    <div class="d-flex justify-content-between">
+                        <b class="textBlue">#@i.orderNo</b>
+                        <div><i class="fa-solid fa-stopwatch"></i><span class="live-time"
+                                data-order-time="@i.OrderDuration">@i.OrderDuration</span></div>
+                    </div>
+                    <div class="d-flex text-dark">
+                        @i.SectionName <i class="bi bi-dot"></i> @i.TableName
+                    </div>
+                </section>
+                <section class="card-content">
+                    @foreach (var item in i.OrderedItems!)
+                    {
+                        <div class="d-flex justify-content-between">
+                            <div class="col-10">
+                                @item.ItemName
+                                <ul style="font-size: 15px;">
+                                    @foreach (var modifier in item.ModifierList!)
+                                    {
+                                        <li>@modifier.Name</li>
+                                    }
+                                    @if (item.Instruction != "" && item.Instruction != null)
+                                    {
+                                        <p class="textBlue">Instruction : @item.Instruction</p>
+                                    }
+                                </ul>
+                            </div>
+                            @item.Quantity
+                        </div>
+                    }
+                </section>
+                <section class="card-footer">
+                    @if (i.OrderInstructions != "" && i.OrderInstructions != null)
+                    {
+                        <div class="textBlue d-flex flex-wrap">
+                            Order Instructions: @i.OrderInstructions
+                        </div>
+                    }
+                </section>
+            </div>
+        }
+    </div>
+}
+<div id="tableData">
+
+</div>
+<script>
+    $('.order').click(function () {
+        var data = $(this).data("id");
+        $.ajax({
+            url: '/OrderAppKot/GetOrderDetails',
+            type: 'GET',
+            data: { data: JSON.stringify(data) },
+            success: function (response) {
+                @* console.log(response); *@
+                    $("#tableData").html(response);
+                $('#MarkAsProgressModal').modal('show');
+            },
+            error: function (xhr, status, error) {
+                toastr.error("An error occurred while fetching the OrderData.Please try again.");
+            }
+        });
+    });
+    document.addEventListener("DOMContentLoaded", function () {
+        const updateTimeDurations = () => {
+            const timeElements = document.querySelectorAll("[data-order-time]");
+
+            timeElements.forEach((element) => {
+                // Parse the current duration (e.g., "1d 2h 3m 4s")
+                const currentDuration = element.innerText.match(/(\d+)d (\d+)h (\d+)m (\d+)s/);
+                if (!currentDuration) return;
+
+                let days = parseInt(currentDuration[1], 10);
+                let hours = parseInt(currentDuration[2], 10);
+                let minutes = parseInt(currentDuration[3], 10);
+                let seconds = parseInt(currentDuration[4], 10);
+
+                // Increment time
+                seconds += 1;
+                if (seconds >= 60) {
+                    seconds = 0;
+                    minutes += 1;
+                }
+                if (minutes >= 60) {
+                    minutes = 0;
+                    hours += 1;
+                }
+                if (hours >= 24) {
+                    hours = 0;
+                    days += 1;
+                }
+
+                let updatedDuration = "";
+                if (days > 0) updatedDuration += `${days}d `;
+                if (days > 0 || hours > 0) updatedDuration += `${hours}h `;
+                if (days > 0 || hours > 0 || minutes > 0) updatedDuration += `${minutes}m `;
+                updatedDuration += `${seconds}s`;
+
+                element.innerText = updatedDuration.trim();
+            });
+        };
+
+        setInterval(updateTimeDurations, 1000);
+    });
+</script>

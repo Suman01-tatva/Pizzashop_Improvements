@@ -1,0 +1,32 @@
+@model IEnumerable<PizzaShop.Entity.Data.Role>;
+@inject IHttpContextAccessor Accessor;
+@using Newtonsoft.Json;
+@using PizzaShop.Entity.ViewModels;
+@{
+    ViewData["Title"] = "Role";
+    var permission =
+    JsonConvert.DeserializeObject<List<RolePermissionViewModel>>(Accessor.HttpContext.Session.GetString("permission"));
+}
+<section class="vh-100">
+    <div class="col-md-8 bg-light mt-5 p-3">
+        <table class="table position-relative">
+            <tr class="bg-light">
+                <th>Role</th>
+                <th
+                    class="text-end  d-@((permission[1].CanEdit == false && permission[1].CanDelete == false) ? "none" : "")">
+                    Action</th>
+            </tr>
+            @foreach (var role in Model)
+            {
+                <tr class="bg-light">
+                    <td>@role.Name</td>
+                    <td
+                        class="text-end d-@((permission[1].CanEdit == false && permission[1].CanDelete == false) ? "none" : "")">
+                        <i class="fa-solid fa-pen-clip mx-3" style="cursor: pointer;"
+                            onclick="window.location.href = '@Url.Action("Permission", "RolePermission", new { id = role.Id })'"></i>
+                    </td>
+                </tr>
+            }
+        </table>
+    </div>
+</section>

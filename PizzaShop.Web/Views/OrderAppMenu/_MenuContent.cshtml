@@ -1,0 +1,757 @@
+@model PizzaShop.Entity.ViewModels.OrderAppMenuPageViewModel;
+@{
+    // Get the current URL
+    var id = ViewContext.RouteData.Values["id"];
+    if (id == null || string.IsNullOrEmpty(id.ToString()))
+    {
+        id = null;
+    }
+    var ExistingItemCount = 0;
+    var orderStatus = @Model.OrderDetails!.OrderStatus;
+    if (orderStatus == null)
+        orderStatus = 1;
+}
+
+<!-- Show/Hide Order Details Button -->
+<span class="d-flex justify-content-end">
+    <button class="btn btn-outline-secondary showOrderDetail d-none mb-3" title="Show Menu">
+        <img src="~/images/square-menu.png" alt="menu-icon">
+    </button>
+</span>
+<div class="d-flex">
+    <div class="w-100 d-lg-block" id="menuItemsContainer">
+        <div class="row" id="menuContentHeader">
+            <div class="col-12 col-lg-4 d-flex align-items-center gap-2 ">
+                <span><button class="d-lg-none btn btn-outline-secondary ms-2" title="Category"
+                        data-bs-toggle="offcanvas" data-bs-target="#categoryOffcanvas"
+                        aria-controls="offcanvasWithBothOptions"><i class="fa-solid fa-bars"></i></button></span>
+                <div class="form-input-div d-flex justify-content-between mx-3 position-relative">
+                    <input type="text" placeholder="Search" class="form-control p-2 d-sm-block " name="search"
+                        minlength="5" required id="searchOrderItems" autocomplete="off" />
+                    <span class="form-input-icon position-absolute search-icon"><i class="fa-solid fa-search"
+                            id="eye-icon" style="color: gray"></i>
+                    </span>
+                </div>
+            </div>
+            <div
+                class="col-12 col-lg-8 d-sm-flex flex-sm-row flex-wrap justify-content-sm-end align-items-center gap-2">
+                <div class="d-flex d-sm-block justify-content-center align-items-center flex-wrap mx-1">
+                    <span class="status-dot veg mx-2 "></span><span id="veg">Vegetarian</span>
+                    <span class="status-dot non-veg mx-2 "></span><span id="nonveg">Non-Vegetarian</span>
+                    @* <span class="status-dot vegan mx-2 "></span><span>Vegan</span> *@
+                </div>
+            </div>
+        </div>
+        <section id="menuItemListDiv">
+            <partial name="_MenuItems" model="Model.ItemList" />
+        </section>
+
+    </div>
+
+    @* Order detail *@
+    @if (@id != null && Model.OrderDetails != null)
+    {
+        <div class="bg-white d-lg-block d-none flex-grow-1 col-12 col-md-5 card shadow-sm p-2" style="overflow-x:hidden;"
+            id="menuOrderDetailsDiv">
+            <div class="row mx-0">
+                <div class="col-6 d-flex">
+                    <img src="~/images/icons/dinner-table.svg" style="height: 3rem;width:2rem;" alt="">
+                    <div class="d-flex ms-2" style="flex-direction: column;">
+                        <div>@Model.OrderDetails!.SectionName</div>
+                        <div><b>Table</b> :
+                            @foreach (var t in Model.OrderDetails.TableOrderNames!)
+                            {
+                                <span>@t</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="d-flex justify-content-end">
+                        <button class="outline-btn border-2 px-2 py-1 me-2" id="getQrCode" onclick="GenerateQRCode()"><img
+                                src="~/images/icons/qrcode.svg" class="mb-1" alt="qrcode"></button>
+                        <button class="outline-btn border-2 px-2 py-1 me-2" id="customerDetail">
+                            <img src="~/images/icons/userLine.svg" class="mb-1" alt="user">
+                        </button>
+                        <button
+                            class="outline-btn border-2 px-2 py-1 @(Model.OrderDetails.OrderStatus == 2 ? "d-none" : "")"
+                            id="customerReview"><img src="~/images/icons/message.svg" alt="review"></button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="OrderItemPartial">
+                <partial name="_OrderItemDetails" model="@Model" />
+            </div>
+        </div>
+    }
+</div>
+
+<div class="modal fade" id="QRCodeModal" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="staticBackdropLabel">Menu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body d-flex flex-column align-items-center justify-content-center" id="qrcode">
+            </div>
+            <div class="modal-footer d-flex justify-content-center">
+                <a data-bs-dismiss="modal"><button type="button"
+                        class="outline-btn border-2 px-3"><b>Done</b></button></a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Load ItemModifier Partialview-->
+<div class="modal fade" id="modifierModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title text-secondary" id="itemName"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div id="itemModifiersModalDiv"></div>
+        </div>
+    </div>
+</div>
+<div id="customerDetailConteiner"></div>
+<div id="InvoiceDetailContainer" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+<script>
+    var modifierCountFlag = false;
+    $(document).on('click', '.item-card',
+        function () {
+            var itemId = $(this).data('id');
+            itemName = $(this).data('name');
+            selectedItem = $(this).data("items");
+            selectedModifiers = [];
+            console.log(selectedItem);
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetItemModifiers", "OrderAppMenu")',
+                data: { itemId: itemId },
+                success: function (data) {
+                    let orderId = window.location.href;
+                    let idExist = orderId.split("/").pop();
+                    if (typeof data === "object" && data.success === false && data.count === 0) {
+                        selectedModifiers = [];
+                        if (idExist == "menu" || idExist == "menu/") {
+                            toastr.warning('No modifiers of this item.')
+                        } else {
+                            modifierCountFlag = true;
+                            AddItemsToOrder();
+                        }
+                    } else {
+                        modifierCountFlag = false;
+                        $('#itemName').text(itemName);
+                        $('#itemModifiersModalDiv').html(data);
+                        if (idExist == "menu" || idExist == "menu/") {
+                            $('.modifierModalFooter').addClass("d-none");
+                        }
+                        if (@orderStatus == 2) {
+                            $('.modifierModalFooter').addClass("d-none");
+                        }
+                        $('#modifierModal').modal('show');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error(error);
+                    toastr.error("An unexpected error occurred while fetching item modifiers!");
+                }
+            });
+        });
+
+    $("#customerReview").click(function () {
+        $("#OrderwiseCommentModal").modal('show');
+    })
+
+    $(document).on('click', '#saveOrderComment',
+        function () {
+            var Comment = $('#orderCumments').val().trim();
+            var id = $('#orderCumments').data('id');
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("AddEditOrderComments", "OrderAppMenu")',
+                data: { orderId: id, comments: Comment },
+                success: function (response) {
+                    if (response.success) {
+                        toastr.success(response.message)
+                        $("#OrderwiseCommentModal").modal('hide');
+                    }
+                    else {
+                        toastr.error(response.message)
+                    }
+                },
+                error: handleAjaxError
+            });
+        }
+    );
+
+    $('#customerDetail').click(function GetCustomerDetails() {
+        console.log(" customerDetails");
+        let orderId = window.location.href;
+        let isExist = orderId.split("/").pop();
+        if (isExist != "menu") {
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetCustomerDetails", "OrderAppMenu")',
+                data: { id: isExist },
+                success: function (data) {
+                    $("#customerDetailConteiner").html(data);
+                    $("#customerDetailsModal").modal('show');
+                }
+            })
+        }
+    });
+
+    function GenerateQRCode() {
+        var url = window.location.href;
+        $('#qrcode').empty();
+        $('#QRCodeModal').modal('show');
+        console.log(url)
+        const qrcode = new QRCode(document.getElementById('qrcode'), {
+            text: url,
+            width: 128,
+            height: 128,
+            colorDark: '#000',
+            colorLight: '#fff',
+            correctLevel: QRCode.CorrectLevel.H
+        });
+    }
+
+    @* AddItem in Order *@
+    var selectedItem;
+    var selectedItemId;
+    var selectedOrderItems = [];
+    var selectedModifiers = [];
+    var modifiersData = [];
+    var SubTotal = 0;
+    var Total = 0;
+
+    $(document).on("click", ".modifierCard", function () {
+        var max = $(this).data('max');
+        var min = $(this).data('min');
+        var mgId = $(this).data('id');
+
+        var count = selectedModifiers.filter(mod => mod.ModifiergroupId === mgId).length;
+        var data = $(this).data('modifier');
+        console.log("modifierData", data);
+        var modifier = {
+            Id: data.id,
+            Name: data.name,
+            Rate: data.rate,
+            Quantity: data.quantity,
+            Description: data.description,
+            ModifiergroupId: data.modifierGroupId,
+            @* Unitid: data.unitId, *@
+        };
+
+    if (selectedModifiers.some(mod => mod.Id === modifier.Id)) {
+        selectedModifiers = selectedModifiers.filter(mod => mod.Id !== modifier.Id);
+        $(this).removeClass("selected");
+    } else {
+        if (count >= max) {
+            toastr.warning("You can select only " + max + " options");
+            return;
+        };
+        selectedModifiers.push(modifier);
+        $(this).addClass("selected");
+    }
+    console.log("selectedModifiers", selectedModifiers);
+    });
+
+    $(document).on("click", "#AddItemToOrder", AddItemsToOrder);
+    async function AddItemsToOrder() {
+        var flag = 1;
+        var ModifiersTotal = 0;
+        var ItemTotal = parseInt(selectedItem.rate) * 1;
+        if (modifierCountFlag == false) {
+            // Check minimum selection for each modifier group
+            $('.modifierGroup').each(function () {
+                var mgId = $(this).data('id');
+                var minSelection = $(this).data('min');
+                const selectedCount = selectedModifiers.filter(mod => mod.ModifiergroupId === mgId).length;
+                console.log("Selected Count for Modifier Group", mgId, ":", selectedCount);
+
+                if (selectedCount < minSelection) {
+                    toastr.warning(`You must select at least ${minSelection} modifiers for the group "${$(this).find('strong').text()}".`);
+                    flag = 0;
+                    return false;
+                }
+            });
+
+            await modifiersData.forEach(d => {
+                var mgId = d.modifierGroupId;
+                var max = d.maxselectionrequired;
+                var min = d.minselectionrequired;
+                var count = selectedModifiers.filter(m => m.Modifiergroupid === mgId).length;
+                if (count > max) {
+                    toastr.warning("You can select only " + max + " options");
+                    flag = 0;
+                    return;
+                }
+                if (count < min) {
+                    toastr.warning("You must select at least " + min + " option from " + d.name);
+                    flag = 0;
+                    return;
+                }
+            });
+        }
+        selectedItem.modifiers = JSON.parse(JSON.stringify(selectedModifiers)); //add modifiers
+        const newItem = JSON.parse(JSON.stringify(selectedItem));
+        newItem.modifiers = JSON.parse(JSON.stringify(selectedModifiers));
+        console.log("SelectedItem", selectedItem.modifiers);
+        var OrderedItemList = @Html.Raw(Json.Serialize(Model.OrderDetails!.OrderItems));
+        console.log("OrderedItems", OrderedItemList);
+        @* console.log("SelectedOrderItem", selectedOrderItems); *@
+            @* console.log("New Item", newItem); *@
+        if (flag == 1) {
+            // Check if the same item with the same modifiers already exists
+            const existingItem = selectedOrderItems.find(
+                item => {
+                    const itemModifiersSorted = item.modifiers.map(mod => mod.Id).sort();
+                    const selectedModifiersSorted = newItem.modifiers.map(mod => mod.Id).sort();
+
+                    return item.Id == newItem.Id &&
+                        JSON.stringify(itemModifiersSorted) === JSON.stringify(selectedModifiersSorted);
+                }
+            );
+            const existingOrderItem = OrderedItemList.find(item => item.menuItemId == selectedItem.Id && item.modifiers.every(mod => selectedModifiers.some(selMod => selMod.Name.toString() === mod.name.toString())));
+            if (existingItem) {
+                // If it exists, increase the quantity
+                existingItem.Quantity += 1;
+                selectedItem.quantity += 1;
+                var itemDiv = $(`#OrderItemListContainer .item-container[data-uniqueid="${existingItem.uniqueId}"]`);
+                const quantityInput = itemDiv.find(".quantity-input");
+                quantityInput.val(existingItem.Quantity);
+                console.log("Existing Item quantity")
+                calculateSubtotal();
+                @* toastr.info("Item quantity updated in the order."); *@
+            } else if (existingOrderItem) {
+                existingOrderItem.quantity += 1;
+                selectedItem.quantity += 1;
+                var itemDiv = $(`#OrderItemListContainer .item-container[data-itemid="${existingOrderItem.menuItemId}"]`);
+                const quantityInput = itemDiv.find(".quantity-input");
+                quantityInput.val(existingOrderItem.quantity);
+                console.log("Existing Item quantity");
+                calculateSubtotal();
+                @* toastr.succ("Item quantity updated in the order."); *@
+            }
+            else {
+                const uniqueId = `${selectedItem.Id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                newItem.uniqueId = uniqueId;
+                selectedOrderItems.push(newItem);
+                console.log(selectedOrderItems);
+                selectedModifiers.forEach(mod => {
+                    ModifiersTotal += parseInt(mod.Rate);
+                })
+                SubTotal += ModifiersTotal;
+                SubTotal += ItemTotal;
+                $("#subTotal").text(SubTotal);
+                $("#OrderItemListContainer").append(
+                    `<div class="d-flex justify-content-between align-items-center shadow-sm rounded-2 border border-2 p-2 my-2 order-item item-container" data-uniqueid="${uniqueId}" data-id="${selectedItem.Id}" data-item='${JSON.stringify(selectedItem)}'>
+                    <div scope="col" class="text-start col-5">
+                        <div class="accordion accordion-flush shadow-none" id="accordionFlushExample">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header itemDetail" id="flush-headingOne">
+                                    <button class="accordion-button collapsed fw-bold p-0" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#${uniqueId}" aria-expanded="false"
+                                        aria-controls="${uniqueId}">
+                                       ${selectedItem.Name}
+                                    </button>
+                                </h2>
+                                <div id="${uniqueId}" class="accordion-collapse collapse"
+                                    aria-labelledby="flush-headingOne" data-bs-parent="#accordionFlushExample">
+                                    <div class="accordion-body p-0">
+                                        <ul class="mb-0">
+                                            ${selectedModifiers.map(mod => `<li>${mod.Name}<span class="mx-2">&#8377;${mod.Rate}</span></li>`).join('')}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <div class="row">
+                            <div class="col-12 d-flex justify-content-end">
+                                <div class="quantity item-quantity">
+                                    <button class="minus border-0 bg-white mx-1" aria-label="Decrease" data-id="0">&minus;</button>
+                                    <input type="number" class="input-box quantity-input" data-rate="${selectedItem.Rate}"
+                                        data-modifier="${ModifiersTotal}" value="${selectedItem.Quantity}" min="1" pattern="^[1-100]\d*$">
+                                    <button class="plus border-0 bg-white mx-1" aria-label="Increase">&plus;</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div scope="col-3 text-left d-flex justify-content-between">
+                        <div class="text-end">
+                            <div class="d-flex flex-column">
+                                <p class="mb-0 itemPrice">&#8377;${selectedItem.Rate}</p>
+                                <p class="modifierPrice">&#8377;${ModifiersTotal}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-0 col-1 mx-0">
+                        <button class="btn border-0 deleteItem" data-uniqueid="${uniqueId}" data-item='${JSON.stringify(selectedItem)}'>
+                            <i class="fa-regular fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+            `)
+            }
+            // Update the modifiers total and subtotal
+            selectedModifiers.forEach(mod => {
+                ModifiersTotal += parseInt(mod.Rate);
+            });
+
+            if (selectedOrderItems.length > 0)
+                $('#orderItemEmpty').addClass('d-none');
+
+            SubTotal += ModifiersTotal;
+            SubTotal += ItemTotal;
+            $("#subTotal").text(SubTotal);
+
+            $("#modifierModal").modal('hide');
+            Modifiers = [];
+            selectedItemId = null;
+            selectedItem = null;
+            calculateSubtotal();
+            console.log("All Final items", getAllOrderItems())
+        } else {
+            return;
+        }
+    };
+
+    function getAllOrderItems() {
+        const items = [];
+
+        $('#OrderItemListContainer .item-container').each(function () {
+            const itemData = $(this).data('item');
+            console.log(itemData);
+            itemData.quantity = parseInt($(this).find('.quantity-input').val()) || 0;
+            itemData.rate = parseFloat($(this).find('.quantity-input').data('rate')) || 0;
+            itemData.modifierPrice = parseFloat($(this).find('.quantity-input').data('modifier')) || 0;
+            itemData.totalPrice = (itemData.rate + itemData.modifierPrice) * itemData.quantity;
+
+            items.push(itemData);
+        });
+
+        return items;
+    }
+
+    //SaveOrder
+    var taxList = [];
+    var subTotal;
+    var totalAmountOfOrder;
+    $(document).on('click', '#saveOrder', function () {
+        console.log("SeletedItems", selectedOrderItems);
+        taxList = [];
+        $('.order-tax').each(function () {
+            const tax = $(this).data('tax');
+            const taxType = tax.type;
+            const taxValue = parseFloat(tax.taxValue) || 0;
+
+            let calculatedTax = 0;
+            if (taxType === true) {
+                calculatedTax = (subTotal * parseFloat(tax.taxAmount)) / 100;
+            } else {
+                calculatedTax = parseFloat(tax.taxAmount);
+            }
+            $(this).find('span.tax-amount').last().text(`₹ ${calculatedTax.toFixed(2)}`);
+            tax.calculatedTax = calculatedTax;
+            taxList.push(tax);
+        });
+
+        $('#notIncludedTaxes .include-tax-checkbox').each(function () {
+            const tax = $(this).closest('.not-included-tax').data('tax');
+            const taxType = tax.type;
+            const taxValue = parseFloat(tax.taxValue) || 0;
+
+            let calculatedTax = 0;
+
+            if ($(this).is(':checked')) {
+                console.log("Checked")
+                if (taxType === true) { // Percentage-based tax
+                    calculatedTax = (subTotal * parseFloat(tax.taxAmount)) / 100;
+                } else { // Fixed amount tax
+                    calculatedTax = tax.taxAmount;
+                }
+                tax.calculatedTax = parseFloat(calculatedTax.toFixed(2));
+                console.log("Checked Tax", tax);
+            } else {
+                tax.calculatedTax = 0;
+            }
+            taxList.push(tax);
+        });
+        console.log("TaxList", taxList);
+        console.log("Subtotal", subTotal);
+
+        const allItems = getAllOrderItems();
+        console.log("AllItems", allItems);
+        if (allItems.length == 0) {
+            toastr.warning('Please Select the Item.');
+            return;
+        }
+        var itemList = allItems.map(item => {
+            if (item.id) {
+                return item;
+            } else {
+                return {
+                    id: -1 || 0,
+                    menuItemId: item.Id, // new item 
+                    itemName: item.Name || "",
+                    quantity: item.quantity || 0,
+                    price: item.rate || 0,
+                    totalAmount: item.totalPrice || 0,
+                    modifiers: (item.modifiers || []).map(mod => ({
+                        id: mod.Id || 0,
+                        orderItemid: item.Id || 0,
+                        name: mod.Name || "",
+                        quantity: mod.Quantity || 0,
+                        rate: mod.Rate || 0,
+                        totalAmount: mod.Rate * mod.Quantity || 0
+                    })),
+                    quantityOfModifier: null, // Explicitly set to null as per obj[0]
+                    modifiersPrice: item.modifierPrice || 0,
+                    totalModifierAmount: 0, // Explicitly set to 0 as per obj[0]
+                    rate: item.rate || 0,
+                    totalPrice: item.totalPrice || 0,
+                    comment: item.comment || "",
+                };
+            }
+        });
+        let orderId = window.location.href;
+        let currentOrderId = orderId.split("/").pop();
+        var orderDetails = {
+            Id: currentOrderId,
+            OrderItems: itemList,
+            OrderTax: taxList,
+            SubTotal: subTotal,
+            Total: totalAmountOfOrder.toFixed(2),
+            status: 3,
+            IsSgstSelected: true,
+        }
+
+        console.log(itemList);
+        console.log(orderDetails);
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("SaveOrder", "OrderAppMenu")',
+            data: { model: orderDetails },
+            success: async function (response) {
+                if (response.success) {
+                    toastr.success(response.message);
+                    window.location.reload();
+                } else {
+                    toastr.error(response.message);
+                }
+            },
+            error: handleAjaxError
+        });
+    });
+
+    //Cancel Order 
+    $(document).on('click', "#cancelOrder", function () {
+        $('#cancelOrderModal').modal('show');
+    });
+    $(document).on('click', '#cancelOrderConfirm',
+        function () {
+            let orderId = window.location.href;
+            let currentOrderId = orderId.split("/").pop();
+            console.log(currentOrderId);
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("CancelOrder", "OrderAppMenu")',
+                data: { orderId: currentOrderId },
+                success: async function (response) {
+                    if (response.success) {
+                        console.log("Save");
+                        toastr.success(response.message);
+                        $('#cancelOrderModal').modal('hide');
+                        window.location.href = "/orderapptable/table";
+                    } else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: handleAjaxError
+            });
+        }
+    );
+
+    //Complete Order
+    var existItemCount
+    $(document).on('click', "#completeOrder", function () {
+        existItemCount = $('#itemCount').data('count');
+        $('#completeOrderModal').modal('show');
+        console.log(existItemCount);
+    });
+
+    $(document).on("click", "#completeOrderConfirm", function () {
+        var allItems = getAllOrderItems();
+        if (allItems.length > existItemCount) {
+            toastr.error("Please save the order.");
+            return;
+        }
+        let orderId = window.location.href;
+        let currentOrderId = orderId.split("/").pop();
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("CompleteOrder", "OrderAppMenu")',
+            data: { id: currentOrderId },
+            success: async function (response) {
+                if (response.success) {
+                    toastr.success(response.message);
+                    $('#completeOrderModal').modal('hide');
+                    $('#CustomerRatingModal').modal('show');
+                } else {
+                    toastr.error(response.message);
+                }
+            },
+            error: handleAjaxError
+        });
+    });
+
+    $(document).on('click', '.deleteItem', function () {
+        var deleteItem = $(this).data('item');
+        console.log(deleteItem);
+
+        if (deleteItem.id == 0) {
+            var uniqueId = $(this).data('uniqueid');
+            console.log(uniqueId)
+            $(this).closest('.orderItem').remove();
+            $('#OrderItemListContainer .item-container[data-uniqueid="' + uniqueId + '"]').remove();
+            calculateSubtotal();
+        } else {
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("CheckItemIsReady", "OrderAppMenu")',
+                data: { id: deleteItem.id },
+                success: async function (response) {
+                    if (response.success) {
+                        $(this).closest('.orderItem').remove();
+                        $('#OrderItemListContainer .item-container[data-id="' + deleteItem.id + '"]').remove();
+                        calculateSubtotal();
+                    } else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: handleAjaxError
+            });
+        }
+    });
+
+    //Generate Invoice
+    $("#generateInvoice").click(function () {
+        let orderId = window.location.href;
+        let id = orderId.split("/").pop();
+        console.log(id);
+        $.ajax({
+            url: "/Order/InvoiceDetail",
+            type: "GET",
+            data: {
+                id: id
+            },
+            success: function (response) {
+                $("#InvoiceDetailContainer").html(response);
+                const element = document.querySelector('#invoice-detail');
+                console.log(response);
+                const isMobile = window.innerWidth < 768;
+
+                const options = {
+                    margin: 1,
+                    filename: 'Invoice.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: {
+                        scale: isMobile ? 3 : 2,
+                        windowWidth: 800
+                    },
+                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+                };
+
+                html2pdf().set(options).from(element).save();
+            },
+            error: function (error) {
+                toastr.error("Error while download pdf file");
+            }
+        })
+    });
+
+    function GetMenuItems() {
+        console.log(itemType);
+        $.ajax({
+            type: "GET",
+            url: '@Url.Action("GetMenuItemsByCategoryId", "OrderAppMenu")',
+            data: {
+                categoryId: categoryId,
+                searchString: $("#searchOrderItems").val(),
+                type: itemType
+            },
+            success: function (response) {
+                $("#menuItemListDiv").html(response);
+            },
+            error: function (xhr, status, error) {
+                console.error("Error fetching menu items:", error);
+            }
+        });
+    }
+
+    $(document).on('click', '.favourite-item', function (e) {
+        e.stopPropagation();
+        var itemId = $(this).data('id');
+        var isFavorite = $(this).hasClass('fa-regular');
+        var icon = isFavorite ? 'fa-solid' : 'fa-regular';
+        console.log(itemId);
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("MarkAsFavourite", "OrderAppMenu")',
+            data: { itemId: itemId },
+            success: async function (response) {
+                if (response.success) {
+                    GetMenuItems();
+                    toastr.success(response.message);
+                } else {
+                    toastr.error(response.message);
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error(error);
+            }
+        });
+    });
+
+    var addItemComment;
+    $(document).on('dblclick', '.item-container', function () {
+        addItemComment = $(this).data('item');
+        console.log(addItemComment);
+        if (addItemComment.comment != null) {
+            $('#itemCumments').val(addItemComment.comment);
+            $('#ItemWiseCommentModal').modal('show');
+        } else {
+            $('#itemCumments').val(addItemComment.instruction);
+            $('#ItemWiseCommentModal').modal('show');
+        }
+    });
+
+    $(document).on('click', '#saveItemComment', function () {
+        var comment = $('#itemCumments').val();
+        addItemComment.comment = comment;
+        console.log(comment)
+        console.log(addItemComment);
+        $('#ItemWiseCommentModal').modal('hide');
+    });
+</script>
+
+<script>
+    @* $(document).on('click', ".showOrderDetail", function () {
+        console.log("toggle")
+        $("#menuOrderDetailsDiv").toggleClass('d-none');
+        $("#menuItemsContainer").toggleClass('d-none');
+    });
+
+    window.addEventListener("resize", ResponsiveOrderDetails);
+    ResponsiveOrderDetails(); *@
+</script>

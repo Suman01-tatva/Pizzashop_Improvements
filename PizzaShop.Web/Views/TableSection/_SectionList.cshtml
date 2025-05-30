@@ -1,0 +1,158 @@
+@model List<PizzaShop.Entity.ViewModels.SectionViewModel>;
+@inject IHttpContextAccessor Accessor;
+@using Newtonsoft.Json;
+@using PizzaShop.Entity.ViewModels;
+@{
+    var permission =
+    JsonConvert.DeserializeObject<List<RolePermissionViewModel>>(Accessor.HttpContext.Session.GetString("permission"));
+}
+<div class="section-list left-section">
+    @for (var i = 0; i < Model.Count(); i++)
+    {
+        <div class="d-flex flex-wrap justify-content-between align-items-center item-category-btn p-2 my-2 section"
+            data-id="@Model[i].Id">
+            <div class="category-btn border-0 bg-light">
+                <h6 class=" mb-0">
+                    <i class="fa-solid fa-grip-vertical"></i>
+                    @Model[i].Name
+                </h6>
+            </div>
+            <span
+                class="edit-delete-icon d-@((permission[3].CanEdit == false && permission[3].CanDelete == false) ? "none" : "")">
+                <a href="javascript:void(0);"
+                    class="edit-btn edit-category d-@(permission[3].CanEdit == false ? "none" : "")"
+                    style="text-decoration: none; color: inherit;">
+                    <i class="fa-solid fa-pencil m-1" data-bs-toggle="modal" data-bs-target="#sectionModal"
+                        onclick="openAddEditModal(@Model[i].Id)"></i>
+                </a>
+                <i class="fa-regular fa-trash-can mx-2 delete-section d-@(permission[3].CanDelete == false ? "none" : "")"
+                    data-id="@Model[i].Id" data-bs-target="#deleteModal" data-bs-toggle="modal"></i>
+            </span>
+        </div>
+    }
+</div>
+
+<div class="modal fade" id="sectionModal" tabindex="-1" aria-labelledby="sectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div id="modalContent"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteSectionModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div id="deleteModalContent">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">Delete Section</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center p-1">
+                    <i class="fa-solid fa-triangle-exclamation fa-2xl" style="color: #FFD43B;"></i>
+                    <p class="fw-bold mb-0">
+                        Are you sure you want to delete this section?
+                    </p>
+                </div>
+                <div class="modal-footer border-0 justify-content-center">
+                    <button type="button" id="deleteSectionBtn" class="fill-btn">Yes</button>
+                    <button type="button" class="outline-btn" data-bs-dismiss="modal">No</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var sectionId = @Model.First().Id;
+    function openAddEditModal(id) {
+        $.get('@Url.Action("AddEditSection", "TableSection")' + '?id=' + id, function (data) {
+            $('#modalContent').html(data);
+            $('#sectionModal').modal('show');
+        });
+    }
+    var deleteSectionId;
+    $(document).on('click', '.delete-section', function () {
+        deleteSectionId = $(this).data("id");
+        $('#deleteSectionModal').modal('show');
+    });
+
+    function GetFilteredItems() {
+        var SearchString = $("#searchString").val();
+        var pageSize = $("#pageSizeTable").val();
+        if (ajaxRequest && ajaxRequest.readyState !== 4) {
+            ajaxRequest.abort();
+        }
+        console.log("GetFilteredItems Item");
+        ajaxRequest = $.ajax({
+            url: "/TableSection/GetTablesBySectionId",
+            type: "GET",
+            data: {
+                sectionId: sectionId,
+                pageIndex: 1,
+                pageSize: 5,
+                searchString: SearchString,
+            },
+            success: function (data) {
+                $("#tableList").html(data);
+            }
+        })
+    }
+
+    function GetFilteredSections() {
+        console.log("GetFilteredSections");
+        ajaxRequest = $.ajax({
+            url: "/TableSection/GetAllSectionsForFilter",
+            type: "GET",
+            success: function (data) {
+                $("#sectionList").html(data);
+            }
+        })
+    }
+
+    $(".section").click(function () {
+        sectionId = $(this).data("id");
+
+        $.ajax({
+            url: '/TableSection/GetTablesBySectionId',
+            type: 'GET',
+            data: { sectionId: sectionId, pageSize: 5, pageIndex: 1, searchString: "" },
+            success: function (response) {
+                $('#searchString').val('');
+                $("#tableList").html(response);
+                deleteTableIds = [];
+            }
+        })
+    })
+
+    $('#deleteSectionBtn').click(function () {
+        console.log(deleteSectionId)
+        $.ajax({
+            url: '/TableSection/DeleteSection',
+            type: 'post',
+            data: { id: deleteSectionId },
+            success: function (response) {
+                if (response == null) {
+                    window.location.href = "/Auth/Login";
+                    toastr.error("Your Session is Expired. Please Login Again!");
+                }
+                if (response.isSuccess) {
+                    @* GetFilteredSections();
+                    sectionId = sectionId;
+                    GetFilteredItems() *@
+                        window.location.reload();
+                    toastr.success(response.message);
+                } else {
+                    toastr.error(response.message);
+                }
+                $("#deleteSectionModal").modal('hide');
+            }
+        })
+    })
+
+    $(".section").first().addClass("active-new");
+    $(".section").click(function () {
+        $(".section").removeClass("active-new");
+        $(this).addClass("active-new");
+    });
+</script>

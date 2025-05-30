@@ -1,0 +1,219 @@
+@model PizzaShop.Entity.ViewModels.UserUpdateViewModel;
+
+@{
+    ViewData["Title"] = "Edit User";
+}
+
+
+<div class="d-flex justify-content-between align-items-center mt-4 mx-3">
+    <h2 class="page-title mx-4">Edit User</h2>
+    <a href="@Url.Action("UserList", "User")" style="text-decoration: none;">
+        <button type="button" class="border-btn">
+            <img src="~/images/less-than-symbol.png" alt="bak-btn" style="height: 20px; width: 20px;"> Back
+        </button>
+    </a>
+</div>
+<div class="form rounded bg-light">
+    <form asp-controller="User" asp-action="UpdateUser" method="post" enctype="multipart/form-data">
+        <div class="col-xl-12">
+            <div class="row">
+                <div class="form-floating col-md-6 my-2">
+                    <input type="text" class="form-control twoc" id="FirstName" asp-for="FirstName">
+                    <label for="FirstName" class="float">First Name*</label>
+                    <span asp-validation-for="FirstName" class="text-danger"></span>
+                </div>
+                <div class="form-floating col-md-6 my-2">
+                    <input type="text" class="form-control twoc" id="LastName" asp-for="LastName">
+                    <label for="LastName" class="float">Last Name*</label>
+                    <span asp-validation-for="LastName" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+        <br>
+
+        <div class="col-xl-12">
+            <div class="row">
+                <div class="form-floating col-md-6 my-2">
+                    <input type="text" class="form-control twoc" id="Username" asp-for="Username">
+                    <label for="Username" class="float">User Name*</label>
+                    <span asp-validation-for="Username" class="text-danger"></span>
+                </div>
+                <div class="form-floating col-md-6 my-2">
+                    <select id="RoleId" name="RoleId" class="form-control" asp-items="ViewBag.Roles"></select>
+                    <label for="RoleId" class="float">Role*</label>
+                </div>
+            </div>
+        </div>
+
+        <br>
+
+        <div class="col-xl-12">
+            <div class="row">
+                <div class="form-floating col-md-6 my-2">
+                    <input type="text" class="form-control twoc" id="Email" asp-for="Email" disabled>
+                    <input type="text" class="form-control twoc" id="Email" asp-for="Email" hidden>
+                    <label for="Email" class="float">Email*</label>
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="form-floating col-md-6 my-2">
+                    <select id="Status" class="form-control" asp-for="IsActive">
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                    <label for="Status" class="float">Status*</label>
+                </div>
+            </div>
+        </div>
+
+        <br>
+        <!-- File Upload -->
+        <div class="mb-3 upload-container d-flex flex-col">
+            <img src="~/images/@(Model?.ProfileImg ?? "Default_pfp.svg.png")" alt="ProfileImg" id="profile-img"
+                class="rounded-circle" style="height: 80px; width: 80px;">
+            <label for="imageInput" class="mx-1">
+                <img src="~/images/cloud-upload.svg" alt="upload-icon" class="mx-4" />
+                <br />
+                Browse File
+            </label>
+            <span id="file-upload-name"></span>
+            <input id="imageInput" asp-for="ProfileImagePath" type="file" name="ProfileImagePath"
+                onchange="showFileName()" accept="image/*" class="input-file" id="fileInput" hidden />
+            <input type="hidden" asp-for="ProfileImg">
+        </div>
+        <br>
+
+        <div class="col-xl-12">
+            <div class="row">
+                <div class="form-floating col-md-4 my-2">
+                    <select id="CountryId" name="CountryId" class="form-control" asp-items="ViewBag.Countries">
+                        <option selected hidden disabled>Select Country</option>
+                    </select>
+                    <label for="CountryId" class="float">Country*</label>
+                    <span asp-validation-for="CountryId" class="text-danger"></span>
+
+                </div>
+                <div class="form-floating col-md-4 my-2">
+                    <select id="StateId" name="StateId" class="form-control" asp-items="ViewBag.States">
+                        <option selected hidden disabled>Select State</option>
+                    </select>
+                    <label for="StateId" class="float">State*</label>
+                    <span asp-validation-for="StateId" class="text-danger"></span>
+
+                </div>
+                <div class="form-floating col-md-4 my-2">
+                    <select id="CityId" name="CityId" class="form-control" asp-items="ViewBag.Cities">
+                        <option selected hidden disabled>Select City</option>
+                    </select>
+                    <label for="CityId" class="float">City*</label>
+                    <span asp-validation-for="CityId" class="text-danger"></span>
+
+                </div>
+            </div>
+        </div>
+
+        <br>
+        <div class="col-xl-12">
+            <div class="row">
+                <div class="form-floating col-md-4 my-2">
+                    <input type="text" class="form-control twoc" id="Zipcode" asp-for="Zipcode" pattern="[0-9]{6}">
+                    <label for="Zipcode" class="float">ZipCode*</label>
+                    <span asp-validation-for="Zipcode" class="text-danger"></span>
+                </div>
+                <div class="form-floating col-md-4 my-2">
+                    <input type="text" class="form-control twoc" id="Address" asp-for="Address">
+                    <label for="Address" class="float">Address*</label>
+                    <span asp-validation-for="Address" class="text-danger"></span>
+                </div>
+                <div class="form-floating col-md-4 my-2">
+                    <input type="text" class="form-control twoc" id="Phone" asp-for="Phone" pattern="[0-9]{10}"
+                        maxlength="10" minlength="10">
+                    <label for="Phone" class="float">Phone*</label>
+                    <span asp-validation-for="Phone" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+
+        <br>
+
+        <div class="form-group p-3 d-flex justify-content-start">
+            <button type="submit" class=" fill-btn m-1 rounded py-2">Update User</button>
+            <button asp-controller="User" asp-action="UserList" class="btn btn-secondary m-1">Cancel</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var initialStateId = '@Model.StateId';
+            var initialCityId = '@Model.CityId';
+
+            $("#CountryId").change(function () {
+                $.getJSON('/User/GetStates', { countryId: $(this).val() }, function (data) {
+                    var stateDropdown = $("#StateId");
+                    stateDropdown.empty().append('<option>Select State</option>');
+                    $.each(data, function (i, state) {
+                        stateDropdown.append('<option value="' + state.id + '">' + state.name + '</option>');
+                    });
+                    if (initialStateId) {
+                        stateDropdown.val(initialStateId);
+                        initialStateId = null;
+                    }
+                    stateDropdown.change();
+                });
+            });
+
+            $("#StateId").change(function () {
+                $.getJSON('/User/GetCities', { stateId: $(this).val() }, function (data) {
+                    var cityDropdown = $("#CityId");
+                    cityDropdown.empty().append('<option>Select City</option>');
+                    $.each(data, function (i, city) {
+                        cityDropdown.append('<option value="' + city.id + '">' + city.name + '</option>');
+                    });
+                    if (initialCityId) {
+                        cityDropdown.val(initialCityId);
+                        initialCityId = null;
+                    }
+                });
+            });
+
+            $('#CountryId').change();
+        });
+        @* document.getElementById('imageInput').addEventListener('change', function (event) {
+            var file = event.target.files[0];
+            document.querySelector("#profile-img")
+
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    document.querySelector("#profile-img").src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        }); *@
+
+            document.getElementById('imageInput').addEventListener("change", function (event) {
+                var file = event.target.files[0];
+                const uploadfile = document.querySelector('#imageInput');
+                if (file) {
+                    if (!file.type.startsWith('image/')) {
+                        toastr.warning("Invalid file type. Please upload an image file.");
+                        uploadfile.value = '';
+                        return;
+                    }
+                    const maxSize = 2 * 1024 * 1024; // 5MB
+                    if (file.size > maxSize) {
+                        toastr.warning("File size exceeds 2MB. Please choose a smaller image.");
+                        uploadfile.value = '';
+                        return;
+                    }
+
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+                        document.querySelector("#profile-img").src = e.target.result;
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+    </script>
+}

@@ -1,0 +1,251 @@
+@model PizzaShop.Entity.ViewModels.OrderDetailsViewModel;
+@using PizzaShop.Entity.Constants;
+<div class="d-flex justify-content-end align-items-center mt-4 mx-3">
+    <a href="@Url.Action("Orders", "Order")" style="text-decoration: none;">
+        <button type="button" class="outline-btn">
+            <img src="~/images/less-than-symbol.png" alt="bak-btn" style="height: 20px; width: 20px;"> Back
+        </button>
+    </a>
+</div>
+<div class="mx-3 orderDetails">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="page-title">Order-Details</h2>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="card mb-3 p-2 fs-2">
+        <div class="card-body d-flex justify-content-between">
+            <div>
+                <h4 class="fw-bold">Order Summary <span
+                        class="badge @(Model.Status == OrderConstants.OrderStatusEnum.Canceled ? "bg-danger" : "bg-success")">@Model.Status</span>
+                </h4>
+                <p class="mb-1 mt-2" style="font-size: 13px;"><strong>Invoice No.:</strong> @Model.InvoiceNo</p>
+                <div class="order-summary d-flex flex-wrap gap-4" style="font-size: 13px;">
+                    <div><b>Paid on:</b> @Model.ModifiedAt</div>
+                    <div><b>Placed on:</b> @Model.CreatedAt</div>
+                    <div><b>Modified on:</b> @Model.ModifiedAt</div>
+
+                    @* @if (Model.Status == (OrderConstants.OrderStatusEnum.Completed))
+                    {
+                    <div><b>Order Duration:</b> </div>
+                    } *@
+                </div>
+            </div>
+            <div>
+                <button type="button" onclick="exportViewOrderPdf()" class="fill-btn fs-6">
+                    <span><i class="fa-solid fa-share-from-square me-1"></i></span>
+                    <span class="export-btn">Export</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer & Table Details -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body" style="color: gray;">
+                    <h5 class="fw-bold"><i class="fa-solid fa-user me-2"></i> Customer Details</h5>
+                    <p><strong>Name: @Model.CustomerName</strong></p>
+                    <p><strong>Phone: @Model.CustomerPhone</strong></p>
+                    <p><strong>Email: @Model.CustomerEmail</strong></p>
+                    <p><strong>No Of Person: @Model.NoOfPeople</strong></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body" style="color: gray;">
+                    <h5 class="fw-bold"><img src="~/images/dining-table.png" style="height: 30px; width:40px"></i> Table
+                        Details</h5>
+                    <p><strong>Table: @foreach(var t in @Model.TableName!){
+                            @t <text>&nbsp;</text>
+                                                        }
+</strong></p>
+                    <p><strong>Section: @Model.SectionName</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Items -->
+    <div class="card mb-3">
+        <div class="card-body table-responsive">
+            <h5 class="fw-bold">Order Items</h5>
+            <table class="table table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th>Sr.No</th>
+                        <th>Item</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Total Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.OrderedItems != null)
+                    {
+                        var srNo = 1;
+                        foreach (var item in Model.OrderedItems)
+                        {
+                            <tr>
+                                <td>@srNo</td>
+                                <td>@item.ItemName
+                                    <ul>
+                                        @foreach (var i in item.Modifiers!)
+                                        {
+                                            <li>@i.Name</li>
+                                        }
+                                    </ul>
+                                </td>
+                                <td>@item.Quantity
+                                    <ul>
+                                        @foreach (var i in item.Modifiers)
+                                        {
+                                            <li>@i.Quantity</li>
+                                        }
+                                    </ul>
+                                </td>
+                                <td>₹@item.Price
+                                    <ul>
+                                        @foreach (var i in item.Modifiers)
+                                        {
+                                            <li><span class="js-format-inr">@i.Rate</span></li>
+                                        }
+                                    </ul>
+                                </td>
+                                <td>₹<span class="js-format-inr">@item.TotalAmount</span>
+                                    <ul>
+                                        @foreach (var i in item.Modifiers)
+                                        {
+                                            <li><span class="js-format-inr">@i.TotalAmount</span></li>
+                                        }
+                                    </ul>
+                                </td>
+                            </tr>
+                            srNo++;
+                        }
+                    }
+                </tbody>
+            </table>
+
+            <div class="text-end">
+                <div class="d-flex justify-content-end">
+                    <div class="me-3">Subtotal: ₹<span class="js-format-inr">@Model.SubTotal</span></div>
+                </div>
+                @if (Model.OrderTaxes != null)
+                {
+                    var srNo = 1;
+                    foreach (var item in Model.OrderTaxes)
+                    {
+                        <div>
+                            <div class="d-flex justify-content-end mb-2"></div>
+                            <div class="me-3">@item.Tax.Name: ₹ <span class="js-format-inr">@item.TaxValue</span></div>
+                        </div>
+                    }
+                    srNo++;
+                }
+                <div class="d-flex justify-content-end mb-2">
+                    <div class="me-3">Discount: ₹<span class="js-format-inr">@Model.Discount</span></div>
+                </div>
+                <div class="d-flex justify-content-end">
+                    <div class="me-3">Total: ₹<span class="js-format-inr">@Model.TotalAmount</span></div>
+                </div>
+            </div>
+        </div>
+         <p class="text-center fw-bold text-blue">THANK YOU!</p>
+    </div>
+</div>
+
+<div id="InvoiceDetailContainer">
+
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+<script>
+    $("#Export").click(function () {
+
+        const element = document.querySelector('.orderDetails');
+
+        const options = {
+            filename: 'OrderDetails.pdf',
+            image: { type: 'jpeg', quality: 1 },
+            html2canvas: { scale: 1 },
+            jsPDF: { unit: 'in', format: 'A3', orientation: 'portrait' }
+        };
+
+        html2pdf().set(options).from(element).save();
+
+    })
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+<script>
+    function exportViewOrderPdf() {
+        // Select the container you want to export
+        const element = document.querySelector('.orderDetails');
+
+        // Configure html2pdf options
+        const options = {
+            margin: 1,
+            filename: 'OrderDetails.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+
+        // Generate and download the PDF
+        html2pdf().set(options).from(element).save();
+    }
+
+    $(".getOrderPdf").click(function () {
+        var id = $(this).data('id')
+        console.log(id);
+        $.ajax({
+            url: "/Orders/InvoiceDetail",
+            type: "GET",
+            data: {
+                id: id
+            },
+            success: function (response) {
+                $("#InvoiceDetailContainer").html(response);
+                const element = document.querySelector('#invoice-detail');
+                console.log(response);
+                const isMobile = window.innerWidth < 768;
+
+                const options = {
+                    margin: 1,
+                    filename: 'OrderDetails.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: {
+                        scale: isMobile ? 3 : 2,
+                        windowWidth: 800
+                    },
+                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+                };
+
+                html2pdf().set(options).from(element).save();
+            },
+            error: function (error) {
+                toastr.error("Error while download pdf file");
+            }
+        })
+    })
+
+     document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.js-format-inr').forEach(function(el) {
+            const num = el.textContent.replace(/[^0-9.]/g, '');
+            if (num) {
+                el.textContent = formatNumberWithIndianSeparator(num);
+            }
+        });
+    });
+    function formatNumberWithIndianSeparator(number) {
+        if (number === null || number === undefined) return "";
+        number = parseFloat(number);
+        if (isNaN(number)) return number;
+        let [intPart, fractionPart] = number.toString().split(".");
+        intPart = intPart.replace(/(\d+)(\d{3})$/, "$1,$2");
+        intPart = intPart.replace(/(\d)(?=(\d\d)+\d{3}\b)/g, "$1,");
+        return fractionPart ? intPart + "." + fractionPart : intPart;
+    }
+
+</script>

@@ -1,0 +1,138 @@
+@model PizzaShop.Entity.ViewModels.OrderDetailsViewModel;
+@{
+    ViewData["Title"] = "InvoiceDetail";
+}
+
+<section class="" id="invoice-detail">
+    <div class="d-flex justify-content-center align-item-center">
+        <img src="~/images/logos/pizzashop_logo.png" alt="pizzaShopLogo" style="height: 50px;width:60px;"> <span
+            class="text-blue fs-2 fw-bold">PIZZASHOP</span>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col rounded-3 mr-md-3 p-3">
+            <h5 class="fw-bold text-blue">
+                Customer Details
+            </h5>
+            <p class="mb-1">Name: @Model.CustomerName</p>
+            <p class="mb-1">Phone: @Model.CustomerPhone</p>
+        </div>
+        <div class="col rounded-3 p-3 mt-3 mt-md-0 ms-md-1">
+            <h5 class="fw-bold text-blue">
+                Order Details
+            </h5>
+            <p class="mb-1">Invoice Number: @Model.InvoiceNo</p>
+            <p class="mb-1">Date: @Model.CreatedAt</p>
+            <p class="mb-1">Section:@Model.SectionName</p>
+            <p class="mb-1">Table: @foreach(var t in @Model.TableName!)
+                {
+                    @t <text>&nbsp;</text>
+                }
+            </p>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table fs-6 mb-0 invoice-detail-table">
+            <thead class="fs-6">
+                <tr class="">
+                    <th scope="col" class="d-flex align-items-center text-start">Sr.No
+                    </th>
+                    <th scope="col" class="text-start">
+                        <div class="d-flex ">Item
+                        </div>
+                    </th>
+                    <th scope="col" class="text-center">
+                        <div class="d-flex align-items-center justify-content-center">Quantity
+                        </div>
+                    </th>
+                    <th scope="col" class="text-center">Price</th>
+                    <th scope="col" class="">
+                        <div class="d-flex justify-content-end align-items-center">
+                            <span style="width: 120px !important;">Total Amount</span>
+                        </div>
+                    </th>
+                </tr>
+            </thead>
+
+            <tbody class="table-group-devider fs-6">
+                @if (@Model.OrderedItems!.Count() == 0)
+                {
+                    <tr>
+                        <td colspan="7" class="text-center text-secondary">No Items Ordered</td>
+                    </tr>
+                }
+                @for (var i = 0; i < @Model.OrderedItems!.Count(); i++)
+                {
+                    <tr class="fw-bold">
+                        <td class="text-start">@(i + 1)</td>
+                        <td class="text-center">
+                            <div class="d-flex flex-column text-center w-100 " style="width: 100px;">
+                                <p class="mb-0 text-start">@Model.OrderedItems![i].ItemName</p>
+                                <ul>
+                                    @foreach (var m in @Model.OrderedItems[i].Modifiers!)
+                                    {
+                                        <li class="text-start">@m.Name</li>
+                                    }
+                                </ul>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex flex-column">
+                                <p class="mb-0">@Model.OrderedItems[i].Quantity</p>
+                                @foreach (var m in @Model.OrderedItems[i].Modifiers!)
+                                {
+                                    <p class="mb-0">@m.Quantity</p>
+                                }
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex flex-column">
+                                <p class="mb-0">@Model.OrderedItems[i].Price?.ToString("N2")</p>
+                                @foreach (var m in @Model.OrderedItems[i].Modifiers!)
+                                {
+                                    <p class="mb-0">@m.Rate?.ToString("N2")</p>
+                                }
+                            </div>
+                        </td>
+                        <td class="text-end">
+                            <div class="d-flex flex-column">
+                                <p class="mb-0">@Model.OrderedItems[i].TotalAmount?.ToString("N2")</p>
+                                @foreach (var m in @Model.OrderedItems[i].Modifiers!)
+                                {
+                                    <p class="mb-0">@m.TotalAmount?.ToString("N2")</p>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="">
+        <div class="d-flex flex-column fw-bold font-small">
+            <p class="mb-1 d-flex justify-content-between"><span>SubTotal:
+
+                </span><span>@Model.SubTotal?.ToString("N2")</span></p>
+
+            @foreach (var t in @Model.OrderTaxes!)
+            {
+                <p class="mb-1 d-flex justify-content-between"><span>@t.Tax.Name</span>
+                    <span>@t.TaxValue?.ToString("N2")</span>
+                </p>
+            }
+        </div>
+    </div>
+    <div class="divider"></div>
+    <div class="d-flex justify-content-between fw-bold text-blue">
+        <span>Total Amount Due : </span>
+        <span>@Model.TotalAmount?.ToString("N2")</span>
+    </div>
+
+    <div class="mt-4">
+        <p class="text-blue fw-bold mb-0">Payment Information</p>
+        <p>Payment Mode : Cash</p>
+    </div>
+    <p class="text-center fw-bold text-blue">THANK YOU!</p>
+</section>

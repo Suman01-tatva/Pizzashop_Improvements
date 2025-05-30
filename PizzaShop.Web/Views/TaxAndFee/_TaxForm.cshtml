@@ -1,0 +1,65 @@
+@model PizzaShop.Entity.ViewModels.TaxAndFeesViewModel
+<partial name="_ValidationScriptsPartial" />
+<div class="modal fade" id="taxModal" tabindex="-1" aria-labelledby="taxModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="taxModalLabel">@(Model.Id == 0 ? "Add New Tax" : "Edit Tax")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="taxForm" method="post" action="@(Model.Id == 0 ? "AddTax" : "EditTax")">
+                    <input type="hidden" asp-for="Id" />
+                    <div class="form-group">
+                        <input type="text" class="form-control" asp-for="Name" name="Name" placeholder="Name*"
+                            style="height: 50px;">
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                    <br>
+                    <div class="col-xl-12 mt-2">
+                        <div class="row g-2">
+                            <div class="form-floating col-xl-6 col-12">
+                                <select id="Type" class="form-control" asp-for="Type">
+                                    <option value="" hidden>Tax Type</option>
+                                    <option value="true">Percentage</option>
+                                    <option value="false">Flat Item</option>
+                                </select>
+                                <label for="Type" class="float">Type*</label>
+                                <span asp-validation-for="Type" class="text-danger"></span>
+                            </div>
+                            <div class="form-floating col-xl-6 col-12">
+                                <input type="text" class="form-control" asp-for="TaxValue" id="Rate">
+                                <label for="Rate" class="float">Tax Value*</label>
+                                <span asp-validation-for="TaxValue" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-12 mt-2">
+                        <div class="row g-2">
+                            <div class="col-lg-3 col-sm-4 col-5 mb-3 align-content-start">
+                                <div class="form-check form-switch text-center"
+                                    style="display: flex; gap: 10px; align-items: center;">
+                                    <input asp-for="IsActive" class="form-check-input" type="checkbox" id="available">
+                                    <label class="" asp-for="IsActive">Available</label>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-sm-4 col-6 mb-3 align-content-start justify-content-start">
+                                <div class="form-check form-switch text-center"
+                                    style="display: flex; gap: 10px; align-items: center;">
+                                    <input asp-for="IsDefault" class="form-check-input" type="checkbox" id="defaultTax">
+                                    <label asp-for="IsDefault" class="defaultTax">Default</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="fill-btn">Save</button>
+                        <button type="button" class="outline-btn" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

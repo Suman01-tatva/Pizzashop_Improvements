@@ -1,0 +1,102 @@
+:root {
+  --textBlue: #006098;
+  --bgColor: ;
+}
+
+* {
+  margin: 0px;
+  padding: 0px;
+  box-sizing: border-box;
+}
+
+.main-div {
+  height: 100vh;
+}
+
+.login-form {
+  background-color: #d2eff6;
+}
+
+.pizza-img {
+  background-size: cover;
+  background-repeat: no-repeat;
+  object-fit: cover;
+}
+
+.login-icon {
+  height: 25px;
+  width: 25px;
+  margin-top: 12px;
+  background: transparent;
+  margin-left: -34px;
+}
+
+.pizza-logo {
+  height: 50px;
+  width: 60px;
+}
+
+.brand-name {
+  color: var(--textBlue);
+}
+
+a {
+  text-decoration: none;
+}
+
+.validation-summary-errors ul li {
+  list-style-type: none;
+  color: red;
+}
+
+.validation-summary-errors ul {
+  padding: 0;
+}
+
+.form-check-input:checked {
+  background-color: #026fad;
+  border-color: black;
+}
+
+#ForgotPassword {
+  cursor: pointer;
+}
+
+@media (max-width: 1024px) {
+  .img-section {
+    display: none;
+  }
+  .login-form {
+    background-image: url("../images/dominos_bg_blur.JPEG");
+    background-repeat: no-repeat;
+    background-size: cover;
+    color: white;
+    width: 100%;
+  }
+  .login-icon {
+    color: black;
+  }
+  .login-container {
+    background-color: rgba(255, 255, 255, 0.6);
+    padding: 16px;
+    border-radius: 20px;
+    color: black;
+    width: 80%;
+  }
+}
+
+@media (max-width: 768px) {
+  .login-container {
+    width: 100%;
+  }
+}
+
+.fill-btn {
+  background-color: var(--textBlue);
+  color: white;
+  border-radius: 6px;
+  padding: 10px;
+  padding-inline: 20px;
+  border: 0;
+  outline: none;
+}

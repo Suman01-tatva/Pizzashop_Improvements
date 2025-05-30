@@ -1,0 +1,299 @@
+@model PizzaShop.Entity.ViewModels.DashboardViewModel;
+
+<!-- Stats Cards -->
+<div class="container-fluid">
+    <div class="row g-3">
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            <div class="dashboard-card">
+                <div class="icon-container icon-sales"><img src="~/images/icons/total-sales.svg"></div>
+                <h3 class="card-value">&#8377;@Model.TotalSales</h3>
+                <p class="card-title">Total Sales</p>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            <div class="dashboard-card">
+                <div class="icon-container icon-orders"><img src="~/images/icons/total-orders.svg"></div>
+                <h3 class="card-value">@Model.TotalOrders</h3>
+                <p class="card-title">Total Orders</p>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            <div class="dashboard-card">
+                <div class="icon-container icon-value"><img src="~/images/icons/order-value.svg"></div>
+                <h3 class="card-value">&#8377;@Model.AverageOrderValue</h3>
+                <p class="card-title">Avg. Order Value</p>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            <div class="dashboard-card">
+                <div class="icon-container icon-waiting"><img src="~/images/icons/waiting-time.svg"></div>
+                <h3 class="card-value" id="avgWT"></h3>
+                <p class="card-title">Avg. Waiting Time</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Graphs -->
+<div class="container-fluid mt-4">
+    <div class="row g-3">
+        <div class="col-lg-6 col-md-6 col-sm-12">
+            <div class="dashboard-card">
+                <div class="d-flex p-0 justify-content-between w-100 form-check form-switch">
+                    <h4 class="card-heading">Revenue</h4>
+                    <div class="d-flex">
+                        <span class="me-5">Line</span>
+                        <input type="checkbox" class="form-check-input" id="revenue-chart" />
+                        <span class="ms-2">Bar</span>
+                    </div>
+                </div>
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-6 col-md-6 col-sm-12">
+            <div class="dashboard-card">
+                <div class="d-flex p-0 justify-content-between w-100 form-check form-switch">
+                    <h4 class="card-heading">Customer Growth</h4>
+                    <div class="d-flex">
+                        <span class="me-5">Line</span>
+                        <input type="checkbox" class="form-check-input" id="customer-chart" />
+                        <span class="ms-2">Bar</span>
+                    </div>
+                </div>
+                <canvas id="customerGrowthChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid mt-4 mb-5">
+    <div class="row g-3">
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            <div class="dashboard-card item-cards">
+                <h4 class="card-heading">Top Selling Items</h4>
+                <table class="item-table">
+                    @if (Model.TopSellingItem!.Count() > 0 && Model.TopSellingItem != null)
+                    {
+                        var c = 1;
+                        @foreach (var i in Model.TopSellingItem!)
+                        {
+                            <tr>
+                                <td>#@c</td>
+                                <td><img src="~/images/@(i.ItemImage != null ? i.ItemImage : "dining-menu.png")"
+                                        alt="Grilled Burger" class="item-img user-profile-img rounded-circle">
+                                </td>
+                                <td>
+                                    <p class="item-name">@i.Name</p>
+                                    <span class="order-count"><i class="fa-solid fa-caret-up"></i> @i.OrderCount Order</span>
+                                </td>
+                            </tr>
+                            c++;
+                        }
+                    }
+                    else
+                    {
+                        <tr class="d-flex justify-content-center align-items-center">
+                            <p class="card-title ms-5 px-5">No Items</p>
+                        </tr>
+                    }
+                </table>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            <div class="dashboard-card item-cards">
+                <h4 class="card-heading">Least Selling Items</h4>
+                <table class="item-table">
+                    @if (Model.LeastSellingItem!.Count() > 0 && Model.LeastSellingItem != null)
+                    {
+                        var c = 1;
+                        @foreach (var i in Model.LeastSellingItem!)
+                        {
+                            <tr>
+                                <td>#@c</td>
+                                <td><img src="~/images/@(i.ItemImage != null ? i.ItemImage : "dining-menu.png")"
+                                        alt="Grilled Burger" class="item-img user-profile-img rounded-circle">
+                                </td>
+                                <td>
+                                    <p class="item-name">@i.Name</p>
+                                    <span class="order-count"><i class="fa-solid fa-caret-up"></i>@i.OrderCount Order</span>
+                                </td>
+                            </tr>
+                            c++;
+                        }
+                    }
+                    else
+                    {
+                        <tr class="d-flex justify-content-center align-items-center">
+                            <p class="card-title ms-5 px-5">No Items</p>
+                        </tr>
+                    }
+                </table>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            <div class="dashboard-card">
+                <div class="icon-container icon-waiting-list">
+                    <img src="@Url.Content("~/images/icons/waiting-list.svg")" alt="Waiting List Count">
+                </div>
+                <h3 class="card-value">@Model.WaitingListCount</h3>
+                <p class="card-title">Waiting List Count</p>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            <div class="dashboard-card">
+                <div class="icon-container icon-customer">
+                    <img src="@Url.Content("~/images/icons/customer.svg")" alt="New Customers">
+                </div>
+                <h3 class="card-value">@Model.NewCustomer</h3>
+                <p class="card-title">New Customers</p>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var revenueChart;
+    var customerGrowthChart;
+    function GetRevenueDetails(charType) {
+        // Get data from the model
+        const revenueLabels = @Html.Raw(Json.Serialize(Model.Revenue!.Labels));
+        const revenueValues = @Html.Raw(Json.Serialize(Model.Revenue.Values));
+
+        // Chart.js configuration
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        revenueChart = new Chart(ctx, {
+            type: charType,
+            data: {
+                labels: revenueLabels,
+                datasets: [{
+                    label: 'Revenue',
+                    data: revenueValues,
+                    fill: true,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time Period'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Revenue (in USD)'
+                        }
+                    }
+                }
+            }
+        });
+
+    }
+
+    function GetCustomerGrowth(charType) {
+        // Get data from the model
+        const customerGrowthLabels = @Html.Raw(Json.Serialize(Model.CustomerGrowth!.Labels));
+        const customerGrowthValues = @Html.Raw(Json.Serialize(Model.CustomerGrowth.Values));
+
+        // Chart.js configuration
+        const customerCtx = document.getElementById('customerGrowthChart').getContext('2d');
+        customerGrowthChart = new Chart(customerCtx, {
+            type: charType,
+            data: {
+                labels: customerGrowthLabels, // X-axis 
+                datasets: [{
+                    label: 'New Customers',
+                    data: customerGrowthValues, // Y-axis 
+                    fill: true,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time Period'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Number of New Customers'
+                        },
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+    document.getElementById('revenue-chart').addEventListener('change', function () {
+        if (revenueChart) { // Check if the chart instance is initialized
+            const chartType = this.checked ? 'bar' : 'line';
+            revenueChart.destroy();
+            GetRevenueDetails(chartType);
+        } else {
+            console.error("Revenue chart is not initialized.");
+        }
+    });
+
+    document.getElementById('customer-chart').addEventListener('change', function () {
+        if (customerGrowthChart) { // Check if the chart instance is initialized
+            const chartType = this.checked ? 'bar' : 'line';
+            customerGrowthChart.destroy();
+            GetCustomerGrowth(chartType)
+        } else {
+            console.error("Customer growth chart is not initialized.");
+        }
+    });
+    GetRevenueDetails('line');
+    GetCustomerGrowth('line');
+
+    function convertAvgWT(minutes) {
+        if (minutes < 60) {
+            return `${minutes.toFixed(0)} mins`; // Ensure 2 decimal places
+        } else if (minutes < 1440) { // Less than a day (1440 minutes)
+            const hours = Math.floor(minutes / 60);
+            const remainingMinutes = minutes % 60;
+            return remainingMinutes > 0
+                ? `${hours.toFixed(0)} hrs ${remainingMinutes.toFixed(0)} mins`
+                : `${hours.toFixed(0)} hrs`;
+        } else { // Greater than or equal to a day
+            const days = Math.floor(minutes / 1440);
+            const remainingMinutes = minutes % 1440;
+            const hours = Math.floor(remainingMinutes / 60);
+            const finalMinutes = remainingMinutes % 60;
+            let result = `${days.toFixed(0)} days`;
+            if (hours > 0) result += ` ${hours.toFixed(0)} hrs`;
+            if (finalMinutes > 0) result += ` ${finalMinutes.toFixed(0)} mins`;
+            return result;
+        }
+    }
+
+    $(document).ready(function () {
+        var waitingTime = convertAvgWT(@Model.AverageWaitingTime);
+        $('#avgWT').text(waitingTime);
+    })
+</script>

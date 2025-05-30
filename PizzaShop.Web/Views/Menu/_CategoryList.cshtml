@@ -1,0 +1,95 @@
+@model List<PizzaShop.Entity.ViewModels.MenuCategoryViewModel>
+@inject IHttpContextAccessor Accessor;
+@using Newtonsoft.Json;
+@using PizzaShop.Entity.ViewModels;
+@{
+    var permission =
+    JsonConvert.DeserializeObject<List<RolePermissionViewModel>>(Accessor.HttpContext!.Session.GetString("permission")!);
+}
+<div class="category-list">
+    @foreach (var category in Model)
+    {
+        <div class="d-flex flex-wrap justify-content-between align-items-center item-category-btn p-2 my-2 itemCategory"
+            data-id="@category.Id">
+            <div class="category-btn border-0 bg-light">
+                @* href="@Url.Action("Menu", "Menu", new { categoryId = category.Id })" *@
+                <h6 class=" mb-0">
+                    <i class="fa-solid fa-grip-vertical"></i>
+                    @category.Name
+                </h6>
+            </div>
+            <span
+                class="edit-delete-icon d-@((permission[2].CanEdit == false && permission[2].CanDelete == false) ? "none" : "")">
+                <a href="javascript:void(0);" data-id="@category.Id"
+                    class="edit-btn editCategory d-@(permission[2].CanEdit == false ? "none" : "")"
+                    style="text-decoration: none; color: inherit;">
+                    <i class="fa-solid fa-pencil m-1"></i>
+                </a>
+                <i class="fa-regular fa-trash-can mx-2 delete-category d-@(permission[2].CanDelete == false ? "none" : "")"
+                    id="deleteCategory" data-id="@category.Id"></i>
+            </span>
+        </div>
+    }
+</div>
+<div id="addEditCategoryContainer">
+
+</div>
+<script>
+    var categoryId = @Model.First().Id;
+    $(".itemCategory").click(function () {
+        categoryId = $(this).data("id");
+
+        $.ajax({
+            url: '/Menu/GetItemsByCategory',
+            type: 'GET',
+            data: { categoryId: categoryId, pageSize: 5, pageIndex: 1, searchString: "" },
+            success: function (response) {
+                $('#searchString').val('');
+                $("#itemList").html(response);
+            }
+        })
+    });
+
+    $(".itemCategory").first().addClass("active-new");
+    $(".itemCategory").click(function () {
+        $(".itemCategory").removeClass("active-new");
+        $(this).addClass("active-new");
+    });
+
+    $('.editCategory').click(function () {
+        cId = $(this).data("id");
+        console.log(cId);
+        $.ajax({
+            url: '/Menu/AddEditCategory',
+            type: 'GET',
+            data: { id: cId },
+            success: function (response) {
+                $("#addEditCategoryContainer").html(response);
+                $("#addCategoryModal").modal('show');
+            }
+        })
+    });
+
+    @* $("#submitNewCategory").click(function () {
+        var form = $('#addNewCategoryForm');
+        var formData = form.serialize();
+        $.ajax({
+            type: "POST",
+            url: '/Menu/AddCategory',
+            data: formData,
+            success: function (response) {
+                if (response.success) {
+                    GetFilteredCategory();
+                    $('#addCategoryModal').modal('hide');
+                    toastr.success(response.message);
+                    $('.modal-backdrop').remove();
+                } else {
+                    toastr.warning(response.message);
+                }
+            },
+            error: function (xhr, status, error) {
+                toastr.error("An error occurred while updating the category. Please try again.");
+            }
+        });
+    }); *@
+</script>

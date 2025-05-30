@@ -1,0 +1,145 @@
+@model PizzaShop.Entity.ViewModels.AddEditExistingModifiersViewModel;
+@{
+    var PageSize = Model.PageSize;
+    var PageIndex = Model.PageIndex;
+    var TotalPage = Model.TotalPage;
+    var SearchString = Model.SearchString;
+    var TotalItems = Model.TotalItems;
+}
+
+<section class="table-responsive">
+    <table class="table modifier-table mb-0">
+        <thead>
+            <tr>
+                <th scope="col">
+                </th>
+                <th scope="col">Name</th>
+                <th scope="col">Unit</th>
+                <th scope="col">Rate</th>
+                <th scope="col">Quantity</th>
+            </tr>
+        </thead>
+        <tbody class="table-group-devider">
+            @if (Model.modifier!.Count == 0)
+    {
+        <tr>
+            <td>Modifiers Not Found</td>
+        </tr>
+    }
+    else{
+@foreach (var modifier in Model.modifier)
+{
+                <tr>
+                    <td>
+                        <div class="form-check">
+                            <input class="form-check-input modifier-checkbox" type="checkbox" data-id="@modifier.Id" value="@modifier.Id" data-name="@modifier.Name" />
+                        </div>
+                    </td>
+                    <td class="">@modifier.Name</td>
+                    <td>@modifier.UnitName</td>
+                    <td>@modifier.Rate</td>
+                    <td>@modifier.Quantity</td>
+                </tr>
+}
+}
+</tbody>
+                    </table>
+                </section>
+            <div class="d-flex justify-content-end align-items-center mt-2">
+                <p class="mb-0">Items Per page</p>
+                <select class="ms-3 form-select w-auto" aria-label="Default select example" id="pageSizeExistingModifiers">
+                    <option value="5" selected="@(PageSize == 5 ? true : false)">5</option>
+                    <option value="10" selected="@(PageSize == 10 ? true : false)">10</option>
+                    <option value="15" selected="@(PageSize == 15 ? true : false)">15</option>
+                </select>
+                <span class="mb-0 ms-2 me-2 d-none d-md-block" id="showing">Showing @(Math.Min(((PageIndex - 1) *
+                    PageSize) + 1,
+                    TotalItems)) -
+                    @(Math.Min(PageIndex * PageSize, TotalItems)) of @TotalItems</span>
+                @if (PageIndex > 1)
+                                {
+                <a class="bg-light border-1 bg-light mx-2 px-2 btn btn-outline-dark" name="PageIndex"
+                    id="PreviousModifiers">
+                    <i class="fa fa-chevron-left"></i>
+                </a>
+                                }
+                                else
+                {
+                    <button class="bg-light border-1 bg-light mx-2 px-2 btn btn-outline-dark" name="PageIndex" hidden>
+                        <i class="fa fa-chevron-left"></i>
+                    </button>
+                }
+
+                @if (PageIndex < TotalPage)
+                {
+                    <a class="bg-light border-1 bg-light mx-2 px-2 btn btn-outline-dark" name="PageIndex"
+                        id="NextModifiers">
+                        <i class="fa fa-chevron-right"></i>
+                    </a>
+                }
+                else
+                {
+                    <button class="bg-light border-1 bg-light mx-2 px-2 btn btn-outline-dark" name="PageIndex" hidden>
+                        <i class="fa fa-chevron-right"></i>
+                    </button>
+                }
+            </div>
+<script>
+var debounce;
+var ajaxRequest;
+var deleteItemId;
+@* Pagination Script *@
+                    $(document).ready(function () {
+                        var pageIndex = @Model.PageIndex;
+
+                        function GetFilteredExistingModifiers() {
+                            var SearchString = $("#searchExistingModifier").val();
+                            var pageSize = $("#pageSizeExistingModifiers").val();
+                            if (ajaxRequest && ajaxRequest.readyState !== 4) {
+                                ajaxRequest.abort();
+                            }
+                            ajaxRequest = $.ajax({
+                                url: "/Menu/GetAllModifiers",
+                                type: "GET",
+                                data: {
+                                    pageSize: pageSize, pageIndex: pageIndex, searchString: SearchString
+                                },
+                                success: function (data) {
+                                    $("#existingModifiersList").html(data);
+                                    selectedModifiers.forEach(m => {
+                                        console.log("checkbox", m)
+                                        $(`.modifier-checkbox[data-name='${m.Name}']`).prop("checked", true);
+                                    });
+                                }
+                            })
+                        }
+
+                        $('#pageSizeExistingModifiers').change(function () {
+                            pageIndex = 1
+                            var pageSize = $(this).val();
+                            GetFilteredExistingModifiers();
+                        })
+
+                        $('#searchExistingModifier').keyup(function () {
+                            var value = $(this).val();
+                            console.log('SearchString',value)
+                            clearTimeout(debounce);
+                            pageIndex = 1
+                            pageSize = @Model.PageSize;
+                            debounce = setTimeout(() => {
+                                GetFilteredExistingModifiers();
+                            }, 600)
+                        })
+
+                        $("#PreviousModifiers").click(function () {
+                            pageIndex -= 1;
+                            GetFilteredExistingModifiers()
+                        })
+
+                        $('#NextModifiers').click(function () {
+                            $("#PreviousBtn").attr('disabled', false)
+                            pageIndex += 1;
+                            GetFilteredExistingModifiers()
+                        })
+                    });
+</script>

@@ -1,0 +1,487 @@
+:root {
+  /* --textBlue: #006098; */
+  --textBlue: #0a58ca;
+}
+
+* {
+  font-family: Roboto;
+}
+
+.content {
+  min-height: 90vh;
+}
+
+/* Sidebar */
+#sidebar {
+  /* min-height: 100vh; */
+  background-color: #fff;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+  z-index: 1050;
+}
+
+#sidebar ul {
+  /* margin-top: 40px; */
+  background-color: white;
+}
+
+#sidebar ul a li {
+  text-decoration: none;
+  color: gray;
+  font-weight: 500;
+}
+
+#sidebar ul a:hover {
+  background-color: rgba(211, 211, 211, 0.384);
+  color: var(--textBlue);
+}
+
+.active-navicon {
+  background-color: rgba(211, 211, 211, 0.384);
+  color: var(--textBlue) !important;
+  li {
+    color: var(--textBlue) !important;
+  }
+}
+
+#sidebar li {
+  list-style-type: none;
+  height: 43px;
+  border-radius: 5px;
+  text-align: left;
+  display: flex;
+  position: relative;
+  padding-left: 10%;
+  align-items: center;
+  font-size: medium;
+}
+.sidebar-header {
+  background-color: white;
+  z-index: 2;
+}
+#sidebar-cancel-btn {
+  display: none;
+  margin-left: 10px;
+}
+
+#pizzashop_logo {
+  width: 60px;
+  height: 50px;
+}
+
+/* Navbar */
+.navbar {
+  height: 60px;
+  background-color: #006098;
+  justify-content: end;
+}
+
+#alert-icon {
+  width: 5px;
+  height: 5px;
+}
+
+.close-btn {
+  display: none;
+}
+
+.nav-title {
+  display: none;
+}
+
+@media (max-width: 990px) {
+  .nav-title {
+    display: block;
+    justify-content: start;
+  }
+
+  .navbar {
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 991px) {
+  .offcanvas-lg.offcanvas-start {
+    width: 200px;
+  }
+  .close-btn {
+    display: inline;
+  }
+}
+
+.brand-name {
+  margin-top: 20px;
+}
+
+@media (max-width: 1180px) {
+  .pizza-logo {
+    height: 35px !important;
+    width: 45px !important;
+  }
+  .brand-name {
+    font-size: medium;
+    /* margin-top: 0px !important; */
+  }
+  .sidebar li {
+    font-size: small;
+  }
+  .sidebar ul {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    transform: translateX(-100%);
+  }
+
+  .sidebar.visible {
+    background-color: aqua;
+    transform: translateX(0);
+  }
+
+  .brand-name-nav {
+    display: none;
+  }
+
+  .profile-img {
+    position: relative !important;
+  }
+}
+
+.dropdown-menu[data-bs-popper] {
+  left: auto;
+  --bs-dropdown-link-active-bg: var(--textBlue);
+  cursor: pointer;
+}
+
+/* Dashboard Design */
+.dashboard-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.icon-container {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 2px;
+  box-shadow: 0 0 0 5px rgb(255, 255, 255);
+  outline: 1px solid rgba(0, 0, 0, 0.4);
+  outline-offset: 5px;
+  margin-top: 10px;
+  margin-right: 15px;
+}
+.dashboard-container {
+  display: flex;
+  padding: 8px;
+  margin: 2px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 20px;
+}
+@media (min-width: 1026px) {
+  .high {
+    height: 170px;
+  }
+}
+
+.dashboard-card {
+  flex: 1;
+  min-width: 170px;
+  min-height: 150px;
+  background: white;
+  padding: 10px;
+  border-radius: 10px;
+  position: relative;
+  text-align: left;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.icon-container img {
+  width: 50%;
+  height: auto;
+}
+.item-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0;
+}
+
+.item-table td {
+  padding: 3px 5px;
+  vertical-align: middle;
+}
+.item-table tr {
+  border-bottom: 1px solid #ccc;
+}
+
+.item-table img {
+  width: 30px;
+  height: 30px;
+}
+
+.item-name {
+  font-size: 14px;
+  font-weight: 350;
+  margin: 0;
+}
+
+.order-count {
+  font-size: 12px;
+  color: #555;
+}
+
+.order-count {
+  display: block;
+  font-size: 14px;
+  color: #555;
+  margin-top: auto;
+}
+.icon-waiting-list {
+  background-color: rgba(255, 209, 3, 0.712);
+  outline-color: rgba(255, 209, 3, 0.712);
+}
+.icon-customer {
+  background-color: rgba(255, 127, 8, 0.61);
+  outline-color: rgba(255, 127, 8, 0.61);
+}
+
+.icon-container img {
+  width: 50%;
+  height: auto;
+}
+
+.icon-sales {
+  background-color: rgba(42, 253, 91, 0.637);
+  outline-color: rgba(42, 253, 91, 0.637);
+}
+
+.icon-orders {
+  background-color: rgba(107, 108, 209, 0.61);
+  outline-color: rgba(107, 108, 209, 0.61);
+}
+
+.icon-value {
+  background-color: rgba(0, 123, 255, 0.2);
+  outline-color: rgba(0, 123, 255, 0.2);
+}
+
+.icon-waiting {
+  background-color: rgba(236, 27, 48, 0.384);
+  outline-color: rgba(236, 27, 48, 0.384);
+}
+
+.page-title {
+  font-weight: 600;
+  color: var(--textBlue);
+  margin-bottom: 20px;
+  margin-top: 25px;
+  margin-left: 10px;
+  display: flex;
+  justify-content: start;
+}
+
+.dashboard-title {
+  font-weight: bold;
+  color: var(--textBlue);
+  margin-bottom: 20px;
+  margin-top: 30px;
+  margin-left: 10px;
+  display: flex;
+  justify-content: start;
+}
+
+.card-value {
+  font-weight: 450;
+  font-size: 22px;
+  color: #333;
+  margin-top: 70px;
+}
+
+.card-title {
+  font-size: 14px;
+  color: #a1a1a1;
+}
+
+.card-heading {
+  font-size: 20px;
+  font-weight: 400;
+  margin-bottom: 10px;
+}
+
+.img-fluid {
+  width: 100%;
+  object-fit: cover;
+}
+
+.item-table img {
+  width: 40px;
+  height: 40px;
+}
+
+.item-cards {
+  height: 150px;
+  overflow-y: scroll;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+}
+@media (max-width: 768px) {
+  .dashboard-card {
+    text-align: center;
+    padding: 15px;
+  }
+}
+
+.fill-btn {
+  background-color: var(--textBlue);
+  color: white;
+  border-radius: 6px;
+  padding: 10px;
+  padding-inline: 20px;
+  border: 0;
+  outline: none;
+}
+
+.fill-btn:disabled {
+  background-color: #8fa5c7;
+  color: white;
+  border-radius: 6px;
+  padding: 10px;
+  padding-inline: 20px;
+  border: 0;
+  outline: none;
+}
+
+.outline-btn {
+  background-color: inherit;
+  color: var(--textBlue);
+  border: 1.5px solid var(--textBlue);
+  border-radius: 6px;
+  padding: 9px;
+  padding-inline: 20px;
+  outline: none;
+  transition: 0.5s;
+}
+
+.outline-btn:hover {
+  background-color: var(--textBlue);
+  color: white;
+  border: 1px solid var(--textBlue);
+  border-radius: 6px;
+  padding: 9px;
+  padding-inline: 20px;
+  outline: none;
+}
+.heading {
+  color: #006098;
+}
+
+.table thead tr th {
+  color: gray;
+}
+
+.back-btn {
+  border: 5px #006098;
+}
+
+.login-icon {
+  height: 25px;
+  width: 25px;
+  background: transparent;
+  margin-left: -34px;
+  margin-top: 5px;
+}
+
+.create-btn {
+  background-color: #006098;
+  color: white;
+  padding: 2px;
+}
+
+.border-btn {
+  border: 2px solid #006098;
+  background-color: white;
+  color: #006098;
+  border-radius: 5px;
+  padding: 7px;
+}
+
+.border-btn:hover {
+  border: 2px solid #006098;
+  background-color: #006098;
+  color: white;
+}
+
+.input-file::-webkit-file-upload-button {
+  display: none;
+}
+
+.upload-container {
+  border: 2px gray dotted;
+  display: flex;
+  border-radius: 10px;
+  padding: 20px;
+  justify-content: center;
+  align-items: center;
+}
+
+.form-switch .form-check-input {
+  background-color: #d6d3d3;
+  border: #006098;
+  background-image: url(../images/toggle-icon.svg) !important;
+  height: 20px;
+  width: 40px;
+}
+
+.permission {
+  min-width: 200px;
+}
+
+.canView {
+  min-width: 150px;
+}
+
+.canEdit {
+  min-width: 150px;
+}
+
+.canDelete {
+  min-width: 150px;
+}
+thead {
+  border: black 15px;
+}
+
+.no-items {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px; /* Adjust height as needed */
+}
+
+.center-image {
+  max-height: 150px;
+}
+
+/*For All Tabe */
+.table td,
+.table th {
+  vertical-align: middle;
+  color: rgb(114, 114, 114) !important;
+  padding: 10px;
+  white-space: nowrap;
+}

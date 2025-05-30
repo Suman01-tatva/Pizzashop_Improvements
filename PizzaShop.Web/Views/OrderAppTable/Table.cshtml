@@ -1,0 +1,266 @@
+@model PizzaShop.Entity.ViewModels.OrderAppTableViewModel;
+@using PizzaShop.Entity.Constants;
+
+@{
+    ViewData["Title"] = "Table";
+    Layout = "~/Views/Shared/_OrderAppLayout.cshtml";
+}
+
+
+<section>
+    <div class="row">
+        <div class="col-12 col-sm-4">
+            <h1 class="page-title">Table</h1>
+        </div>
+        <div class="col-12 col-sm-8 d-sm-flex flex-sm-row flex-wrap justify-content-sm-end align-items-center gap-2">
+            <div class="d-flex d-sm-block justify-content-center align-items-center">
+                <span class="status-dot status-empty mx-2 "></span><span>Available</span>
+                <span class="status-dot status-selected mx-2 "></span><span>Selected</span>
+            </div>
+
+            <div class="d-flex d-sm-block justify-content-center align-items-center">
+                <span class="status-dot status-filled mx-2 "></span><span>Assigned</span>
+                <span class="status-dot status-reserved mx-2 "></span><span>Running</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="p-3 ">
+        <div class="accordion accordion-flush" id="accordionFlushExample">
+            @if (Model.SectionList == null || Model.SectionList.Count() == 0)
+            {
+                <p class="textBlue">No Sections Found</p>
+            }
+            else
+            {
+                @foreach (var s in Model.SectionList)
+                {
+                    <div class="accordion-item my-1 selectedSection">
+                        <h2 class="accordion-header d-sm-flex  justify-content-md-between align-items-center p-2">
+                            <button class="accordion-button collapsed textBlue fw-bold bg-white shadow-none border-0"
+                                type="button" data-bs-toggle="collapse" data-bs-target="#@s.Id" aria-expanded="false"
+                                aria-controls="@s.Id">
+                                @s.Name
+                            </button>
+                            <div class="accordian-item-right-section d-flex justify-content-between align-items-center">
+                                <div class="d-flex justify-content-center align-items-center">
+                                    <span class="status-dot status-empty"></span> <span class="status-count">@s.Available</span>
+                                    <span class="status-dot status-filled"></span> <span class="status-count">@s.Assigned</span>
+                                    <span class="status-dot status-reserved"></span> <span
+                                        class="status-count">@s.Running</span>
+                                </div>
+                                <div class="create-token-btn">
+                                    <button class="btn btn-outline-primary ms-2 d-flex createWaitingToken" data-sectionid="@s.Id"
+                                    style="width: 150px;"> + Waiting
+                                    Token
+                                    </button>
+                                </div>
+                            </div>
+                        </h2>
+                        <div id="@s.Id" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+                            <div class="accordion-body bg-white">
+                                <div class="d-flex flex-wrap gap-3">
+                                    @if (s.TableList == null || s.TableList.Count == 0)
+                                    {
+                                        <div class="textBlue">No Tables</div>
+                                    }
+                                    else
+                                    {
+                                        @foreach (var t in s!.TableList!)
+                                        {
+                                            <div data-id="@t.Id" data-sectionid="@s.Id"
+                                                class="table-card @( t.OrderStatus == "Running" ? "filled" :  (t.OrderStatus == "Assigned") ? " reserved" : "empty" )"
+                                                data-status="@t.Status" data-orstatus="@t.OrderStatus" data-capacity="@t.Capacity" data-order="@t.OrderId">
+                                                <div class=" d-flex justify-content-between text-start">
+                                                    <strong>@t.Name </strong>
+                                                    <span>₹ @t.TotalAmount</span>
+                                                </div>
+                                                <div class="row d-flex justify-content-between mt-4">
+
+                                                    <span class="col-5 d-flex flex-column text-start"><span>👥</span>
+                                                        <span>@t.Capacity</span></span>
+                                                    <span class="col-7 d-flex flex-wrap flex-column">
+                                                        @if (@t.TimeDuration != "" && @t.OrderStatus != "Available")
+                                                        {
+                                                            <i class="fa-solid fa-stopwatch" style="color: #a3a3a3;"></i>
+                                                            <span data-timeduration="@t.TimeDuration">@t.TimeDuration</span>
+                                                        }else{
+                                                            <i class="fa-solid fa-stopwatch" style="color: #a3a3a3;"></i>
+                                                            <span>0 min</span>
+                                                        }
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                                <div class="d-flex justify-content-end">
+                                    <span>
+                                        <button class="btn btn-primary assign-btn mt-4" data-sectionid="@s.Id"
+                                            data-sectionname="@s.Name" disabled>Assign</button>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</section>
+<div id="assignTableOffcanvas"></div>
+<div id="WaitingTokenContainer"></div>
+
+<script>
+    let selectedTableIds = [];
+    var tableDetailList = [];
+    var selectedSectionId = null;
+    var selectedTableId = null;
+
+    $(".accordion-item .accordion-button").on("click", function () {
+        const newSectionId = $(this).attr("data-bs-target").replace("#", "");
+
+        // If switching to a different section
+        if (selectedSectionId !== newSectionId) {
+            // Clear previously selected tables
+            $(".table-card.table-select").removeClass("table-select");
+            selectedTableIds = [];
+            selectedSectionId = newSectionId;
+
+            $(".assign-btn").prop("disabled", true);
+            console.log("Switched section. Cleared selected tables.");
+        }
+    });
+
+        $(".table-card").on("click", function () {
+            const status = $(this).data("status");
+            const orderStatus = $(this).data("orstatus");
+            const orderId = $(this).data("order");
+            const tableSectionId = $(this).data("sectionid"); // The section ID of the clicked table
+            selectedTableId = $(this).data("id");
+
+            if (status === "True" && orderStatus !== "Assigned" && tableSectionId == selectedSectionId) {
+                $(this).toggleClass("table-select");
+
+                // Update selectedTableIds with currently selected tables
+                selectedTableIds = $(".table-card.table-select").map(function () {
+                    return {
+                        TableId: $(this).data("id"),
+                    };
+                }).get();
+                tableDetailList = $(".table-card.table-select").map(function () {
+                    return {
+                        id: $(this).data("id"),
+                        capacity: $(this).data("capacity"),
+                    };
+                }).get();
+
+                $(".assign-btn").prop("disabled", selectedTableIds.length === 0);
+                $("#selectedCount").text(selectedTableIds.length);
+
+                @* console.log("Selected Table Info:", selectedTableIds); *@
+                    console.log("Selected Table Info:", tableDetailList);
+            } else if (tableSectionId !== selectedSectionId) {
+                console.log(orderId);
+                if(orderId == 0 || orderId == null)
+                    return;
+                window.location.href = `/orderappmenu/menu/${orderId}`;
+            } else {
+                console.log(orderId);
+                if(orderId == 0 || orderId == null)
+                    return;
+                 window.location.href = `/orderappmenu/menu/${orderId}`;
+            }
+        });
+
+    $(document).on('click', ".assign-btn", function () {
+        selectedSectionId = $(this).data("sectionid");
+        const sectionName = $(this).data("sectionname");
+        console.log(selectedSectionId);
+
+        $.ajax({
+            url: '/OrderAppTable/GetWaitingTokensBySectionId',
+            type: 'GET',
+            data: { sectionId: selectedSectionId },
+            success: function (response) {
+                $("#assignTableOffcanvas").html(response);
+
+                $('#assignSidebar').offcanvas('show');
+            },
+            error: function (xhr, status, error) {
+                toastr.error("An error occurred while open the AssignTableSidebar.Please try again.");
+            }
+        });
+
+        // If tables already selected, enable button, else disable
+        selectedTableIds = $(".table-card.table-select").map(function () {
+            return $(this).data("id");
+        }).get();
+
+        tableDetailList = $(".table-card.table-select").map(function () {
+            return {
+                id: $(this).data("id"),
+                capacity: $(this).data("capacity"),
+            };
+        }).get();
+        $(".assign-btn").prop("disabled", selectedTableIds.length === 0);
+        $("#selectedCount").text(selectedTableIds.length);
+        console.log("Selected Tables", selectedTableIds)
+    });
+
+    //Create WaitingToken
+    $(".createWaitingToken").click(function () {
+        var sectionId = $(this).data("sectionid");
+        console.log(sectionId);
+        $.ajax({
+            url: '@Url.Action("AddEditWaitingToken", "OrderAppWaitingList")',
+            type: 'GET',
+            data: { id: null },
+            success: function (response) {
+                $("#WaitingTokenContainer").html(response);
+                $("#addEditWaitingListModal").modal('show');
+                $('#WTSectionDropDown').val(sectionId);
+                $('#WTSectionDropDown').prop("selected", true);
+            },
+            error: handleAjaxError
+        })
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+    const updateTimeDurations = () => {
+        const timeElements = document.querySelectorAll("[data-timeduration]");
+
+        timeElements.forEach((element) => {
+            // Parse the current duration (e.g., "1d 2h 3m 4s")
+            const currentDuration = element.innerText.match(/(\d+)d (\d+)h (\d+)m (\d+)s/);
+            if (!currentDuration) return;
+
+            let days = parseInt(currentDuration[1], 10);
+            let hours = parseInt(currentDuration[2], 10);
+            let minutes = parseInt(currentDuration[3], 10);
+            let seconds = parseInt(currentDuration[4], 10);
+
+            // Increment time
+            seconds += 1;
+            if (seconds >= 60) {
+                seconds = 0;
+                minutes += 1;
+            }
+            if (minutes >= 60) {
+                minutes = 0;
+                hours += 1;
+            }
+            if (hours >= 24) {
+                hours = 0;
+                days += 1;
+            }
+
+            // Update the element's text with the new duration
+            element.innerText = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        });
+    };
+
+    // Start the interval to update every second
+    setInterval(updateTimeDurations, 1000);
+});
+</script>

@@ -1,0 +1,219 @@
+@model PizzaShop.Entity.ViewModels.CustomerPageViewModel
+@{
+    var PageSize = Model.PageSize;
+    var PageIndex = Model.PageIndex;
+    var TotalPage = Model.TotalPage;
+    var SearchString = Model.SearchString;
+    var TotalRecord = Model.TotalCustomers;
+    var SortOrder = Model.SortOrder;
+    var DateRange = Model.DateRange;
+}
+
+<div class="col-md-12">
+    <div class="customer-header">
+        <h2 class="page-title">Customers</h2>
+        <div class="d-flex customer-filter" style="gap: 10px; margin-right: 12px;">
+            <div class="form-input-div d-flex justify-content-between position-relative customer-items">
+                <input type="text" placeholder="Search" class="form-control p-2 d-sm-block" required
+                    id="searchString" />
+                <span class="form-input-icon position-absolute search-icon mx-2" style="margin-top: 10px;"><i
+                        class="fa-solid fa-search" id="eye-icon" style="color: gray"></i>
+                </span>
+            </div>
+            <div class="customer-items">
+                <select id="dateRange" class="form-control form-select " onfocus="this.selectedIndex = ''"
+                    style="height: 42px; border:1px solid #d3d3d3; border-radius: 5px;"
+                    aria-label="Default select example">
+                    <option value="" hidden>Select Status
+                    </option>
+                    <option value="AllTime" selected="@(DateRange == "AllTime" ? true : false)">All Time</option>
+                    <option value="Last7Days" selected="@(DateRange == "Last7Days" ? true : false)">Last Week</option>
+                    <option value="Last30Days" selected="@(DateRange == "Last30Days" ? true : false)">Last Month
+                    </option>
+                    <option value="CurrentMonth" selected="@(DateRange == "CurrentMonth" ? true : false)">Current Month
+                    </option>
+                    <option value="CustomeDate" selected="@(DateRange == "CustomeDate" ? true : false)">Custome Date
+                    </option>
+                </select>
+            </div>
+            <div class="d-flex justify-content-center align-items-center customer-items">
+                <button type="button" class="fill-btn p-2 px-4" id="ExportToExcel">
+                    <span></span><i class="fa-solid fa-share-from-square me-1"></i></span>
+                    <span>Export</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="userListContainer">
+    @await Html.PartialAsync("_CustomerList", Model)
+</div>
+
+<!-- Date Range Modal -->
+<div class="modal fade" id="dateRangeModal" tabindex="-1" role="dialog" aria-labelledby="dateRangeModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="dateRangeModalLabel" style="color:grey;"><b>Select Date Range</b></h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+            </div>
+            <div class="modal-body d-flex justify-content-center align-items-center">
+                <div class="form-floating col-6 p-2">
+                    <input type="date" class="form-control" id="fromDate"
+                        style="border:1px solid #d3d3d3; border-radius: 5px;" "required>
+                    <label  for=" startDate" class="mt-2 mx-1">Start Date</label>
+                </div>
+                <div class="form-floating col-6 p-2">
+                    <input type="date" class="form-control" id="toDate"
+                        style="border:1px solid #d3d3d3; border-radius: 5px;" required>
+                    <label for="endDate" class="mt-2 mx-1">End Date</label>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-center border-0">
+                <button type="button" class="fill-btn" id="submitDateRange">Submit</button>
+                <button type="button" class="outline-btn" data-bs-dismiss="modal" id="closeDateRange">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var debounceTimer;
+        var customerPageIndex = @PageIndex, pageSize = 5, searchString = "", dateRange = "AllTime", fromDate = null, toDate = "";
+        var sortOrder = "@SortOrder";
+        var AjaxReq;
+        var deleteTableId;
+
+        const today = new Date().toISOString().split('T')[0];
+
+        document.getElementById("fromDate").setAttribute("max", today);
+        document.getElementById("toDate").setAttribute("max", today);
+
+        function GetFilteredCustomers(pageIndex = 1) {
+            var searchString = $('#searchString').val();
+            var pageSize = $('#userPageSize').val();
+            var dateRange = $('#dateRange').val();
+            var fromDate = $('#fromDate').val();
+            var toDate = $('#toDate').val();
+
+            if (AjaxReq && AjaxReq.readyState !== 4)
+                AjaxReq.abort();
+            AjaxReq = $.ajax({
+                url: "/Customer/GetCustomers",
+                type: "GET",
+                data: {
+                    pageIndex: customerPageIndex,
+                    pageSize: pageSize,
+                    searchString: searchString,
+                    sortOrder: sortOrder,
+                    dateRange: dateRange,
+                    fromDate: fromDate,
+                    toDate: toDate
+                },
+                success: function (data) {
+                    $("#userListContainer").html(data);
+                }
+            })
+        }
+
+        $('#dateRange').change(function () {
+            var pageIndex = 1;
+            var dateRange = $('#dateRange').val();
+            if (dateRange == "CustomeDate") {
+                $('#fromDate').val('');
+                $('#toDate').val('');
+                $('.modal').on('show.bs.modal', function () {
+                    $(this).removeData('bs.modal');
+                });
+                $('#dateRangeModal').modal('show');
+            }
+            else {
+                GetFilteredCustomers();
+            }
+        });
+
+        $('#submitDateRange').click(function () {
+            fromDate = $('#fromDate').val();
+            toDate = $('#toDate').val();
+            if (fromDate && toDate) {
+                $('#dateRangeModal').modal('hide');
+                $('#dateRange').val('CustomeDate');
+                GetFilteredCustomers();
+                @* $('#dateRange').val('AllTime'); *@
+                            } else {
+                toastr.error('Both Start Date and End Date are required.');
+            }
+        });
+
+        $('#closeDateRange').click(function () {
+            $('#dateRangeModal').modal('hide');
+            @* $('#dateRange').val('AllTime'); *@
+                        })
+
+        $("#ExportToExcel").click(function () {
+            var searchString = $('#searchString').val();
+            var pageSize = $('#userPageSize').val();
+            var dateRange = $('#dateRange').val();
+            var fromDate = $('#fromDate').val();
+            var toDate = $('#toDate').val();
+
+            $.ajax({
+                url: "/Customer/GenerateExcelFile",
+                type: "POST",
+                data: {
+                    pageIndex: customerPageIndex,
+                    pageSize: pageSize,
+                    searchString: searchString,
+                    sortOrder: sortOrder,
+                    dateRange: dateRange,
+                    fromDate: fromDate,
+                    toDate: toDate
+                },
+                xhrFields: {
+                    responseType: 'blob'
+                },
+                success: function (data, status, xhr) {
+                    // Check if response is JSON (indicating no records found)
+                    var contentType = xhr.getResponseHeader('Content-Type');
+                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                        var reader = new FileReader();
+                        reader.onload = function () {
+                            var response = JSON.parse(reader.result);
+                            if (!response.success) {
+                                toastr.warning(response.message);
+                            }
+                        };
+                        reader.readAsText(data);
+                    } else {
+                        // Proceed with file download if response contains a file
+                        var ExcelFile = new Blob([data], { type: xhr.getResponseHeader('content-type') });
+                        var a = document.createElement("a");
+                        var url = window.URL.createObjectURL(ExcelFile);
+                        a.href = url;
+                        a.download = 'Customers.xlsx';
+                        a.click();
+                    }
+                },
+                error: function () {
+                    toastr.warning("No records found to export!");
+                }
+            });
+        });
+
+        $("#fromDate").change(function () {
+            fromDate = $(this).val();
+            document.getElementById("toDate").setAttribute("min", fromDate);
+            document.getElementById("toDate").setAttribute("max", today);
+        })
+
+        $("#toDate").change(function () {
+            toDate = $(this).val();
+            document.getElementById("fromDate").setAttribute("max", toDate);
+            document.getElementById("fromDate").setAttribute("max", today);
+        })
+    </script>
+}

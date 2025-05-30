@@ -1,0 +1,96 @@
+@model PizzaShop.Entity.ViewModels.ItemModifierViewModel;
+
+<div class="modifier-group p-3" id="modifier-group-@Model.ModifierGroupId">
+  <div class="row">
+    <input type="hidden" class="modifierGrp-name" data-name="@Model.Name" data-id="@Model.ModifierGroupId">
+    <input type="hidden" class="mapping-id" data-id="@Model.Id">
+    <div class="d-flex justify-content-between">
+      <p class="fw-bold text-secondary">@Model.Name</p>
+      <i class="fa-solid fa-trash remove-modifier text-secondary" data-id="@Model.ModifierGroupId"></i>
+    </div>
+    <div class="col-md-6">
+      <select asp-for="@Model.Minselectionrequired" class="form-select min-value rounded-pill">
+        @for (int i = 1; i <= 10; i++)
+        {
+          <option value="@i">@i</option>
+        }
+      </select>
+    </div>
+    <div class="col-md-6">
+      <select asp-for="@Model.Maxselectionrequired" class="form-select max-value rounded-pill">
+        @for (int i = 1; i <= 10; i++)
+        {
+          <option value="@i">@i</option>
+        }
+      </select>
+    </div>
+    <ul class="mb-0">
+      @if (Model.ModifierList!.Count > 0)
+      {
+        @foreach (var modifier in Model.ModifierList)
+        {
+          <div class="d-flex justify-content-between">
+            <li class="d-flex w-100 ps-2 justify-content-between"><span>@modifier.Name</span>
+              <span>@modifier.Rate.ToString("C")</span>
+            </li>
+          </div>
+        }
+      }
+      else
+      {
+        <div>
+          <p>No Modifiers Found</p>
+        </div>
+      }
+    </ul>
+  </div>
+</div>
+<script>
+  $(document).on('change', '.min-value', function () {
+    var $modifierGroup = $(this).closest('.modifier-group');
+    var minVal = parseInt($(this).val());
+    var $maxSelect = $modifierGroup.find('.max-value');
+    var maxVal = parseInt($maxSelect.val());
+
+    // If min > max, set max = min
+    if (minVal > maxVal) {
+      $maxSelect.val(minVal).trigger('change');
+    }
+
+    // Disable options in max-value that are less than min
+    $maxSelect.find('option').each(function () {
+      if (parseInt(this.value) < minVal) {
+        $(this).attr('disabled', 'disabled');
+      } else {
+        $(this).removeAttr('disabled');
+      }
+    });
+  });
+
+  $(document).on('change', '.max-value', function () {
+    var $modifierGroup = $(this).closest('.modifier-group');
+    var maxVal = parseInt($(this).val());
+    var $minSelect = $modifierGroup.find('.min-value');
+    var minVal = parseInt($minSelect.val());
+
+    // If max < min, set min = max
+    if (maxVal < minVal) {
+      $minSelect.val(maxVal).trigger('change');
+    }
+
+    // Disable options in min-value that are greater than max
+    $minSelect.find('option').each(function () {
+      if (parseInt(this.value) > maxVal) {
+        $(this).attr('disabled', 'disabled');
+      } else {
+        $(this).removeAttr('disabled');
+      }
+    });
+  });
+
+  // Optionally, trigger change event on page load for pre-selected values
+  $(document).ready(function () {
+    $('.min-value').trigger('change');
+    $('.max-value').trigger('change');
+  });
+</script>

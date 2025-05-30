@@ -1,0 +1,208 @@
+@model PizzaShop.Entity.ViewModels.CustomerPageViewModel;
+@{
+    var PageSize = Model.PageSize;
+    var PageIndex = Model.PageIndex;
+    var TotalPage = Model.TotalPage;
+    var SearchString = Model.SearchString;
+    var TotalRecord = Model.TotalCustomers;
+    var SortOrder = Model.SortOrder;
+    var DateRange = Model.DateRange;
+    var FromDate = Model.FromDate;
+    var ToDate = Model.ToDate;
+}
+
+<section class="table-responsive shadow card p-2">
+    <table class="table table-hover user-table mb-0">
+        <thead>
+            <tr>
+                <th scope="col">
+                    Name
+                    <a href="#" class="sortCustomers" data-sort="@ViewData["nameSortParam"]"
+                        style="text-decoration: none;color: inherit;">
+                        <i class="fa-solid fa-sort"></i>
+                    </a>
+                </th>
+                <th scope="col">
+                    Email
+                </th>
+                <th scope="col">
+                    <div class="d-flex justify-content-center align-items-center">Phone</div>
+                </th>
+                <th scope="col">
+                    <div class="d-flex gap-2 justify-content-center align-items-center">
+                        Date
+                        <a href="#" class="sortCustomers" data-sort="@ViewData["dateSortParam"]">
+                            <i class="fa-solid fa-sort"></i>
+                        </a>
+                    </div>
+                </th>
+                <th scope="col">
+                    <div class="d-flex gap-2 justify-content-center align-items-center">TotalOrder
+                        <a href="#" class="sortCustomers" data-sort="@ViewData["totalOrderSortParam"]"
+                            style="text-decoration: none;color: inherit;">
+                            <i class="fa-solid fa-sort"></i>
+                        </a>
+                    </div>
+                </th>
+            </tr>
+        </thead>
+        <tbody class="table-group-devider p-3">
+            @if (@Model.CustomerList.Count() == 0)
+            {
+                <tr>
+                    <td colspan="5" class="text-center">
+                        <img src="~/images/empty-items.jpg" alt="Not Found" class="center-image">
+                    </td>
+                </tr>
+            }
+            @foreach (var customer in Model.CustomerList)
+            {
+                <tr id="@customer.Id" data-id="@customer.Id" class="customer">
+                    <td style="min-width: 200px;">
+                        @customer.Name
+                    </td>
+                    <td>
+                        @customer.Email
+                    </td>
+                    <td>
+                        <div class="d-flex justify-content-center align-items-center">@customer.Phone</div>
+                    </td>
+                    <td>
+                        <div class="d-flex justify-content-center align-items-center">
+                            @(customer.LastOrderDate == null ? "-" : customer.LastOrderDate)
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex justify-content-center align-items-center">
+                            @customer.TotalOrders
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <div class="d-flex justify-content-center justify-content-sm-end align-items-center mt-4 mx-3 mb-3">
+        <p class="mb-0 fs-6">Items Per page</p>
+        <select class="mx-2 form-select w-auto" aria-label="Default select example" id="customerPageSize">
+            <option value="5" selected="@(PageSize == 5 ? true : false)">5</option>
+            <option value="10" selected="@(PageSize == 10 ? true : false)">10</option>
+            <option value="15" selected="@(PageSize == 15 ? true : false)">15</option>
+        </select>
+
+        <span class="mb-0 ms-2 me-2 d-none d-md-block" id="showing">Showing @(Math.Min(((PageIndex - 1) * PageSize) + 1,
+                        TotalRecord)) -
+            @(Math.Min(PageIndex * PageSize, TotalRecord)) of @TotalRecord</span>
+        @if (PageIndex > 1)
+        {
+            <a class="bg-llight border-1 bg-light px-2 btn btn-outline-dark mx-2" name="PageIndex" id="PreviousCustomers">
+                <i class="fa fa-chevron-left"></i>
+            </a>
+        }
+        else
+        {
+            <button class="bg-llight border-1 bg-light px-2 btn btn-outline-dark" name="PageIndex" hidden>
+                <i class="fa fa-chevron-left"></i>
+            </button>
+        }
+
+        @if (PageIndex < TotalPage)
+        {
+            <a class="bg-llight border-1 bg-light px-2 btn btn-outline-dark" name="PageIndex" id="NextCustomers">
+                <i class="fa fa-chevron-right"></i>
+            </a>
+        }
+        else
+        {
+            <button class="btn btn-outline-secondary px-3 py-0" name="PageIndex" hidden>
+                <i class="fa fa-chevron-right"></i>
+            </button>
+        }
+    </div>
+</section>
+<div id="custoemrData"></div>
+<script>
+    var debounceTimer;
+    var customerPageIndex = @PageIndex, pageSize = 5, searchString = "", dateRange = "AllTime", fromDate = null, toDate = "";
+    var sortOrder = "@SortOrder";
+    var AjaxReq;
+    var deleteTableId;
+
+    function GetFilteredCustomers(pageIndex = 1) {
+        var searchString = $('#searchString').val();
+        var pageSize = $('#customerPageSize').val();
+        var dateRange = $('#dateRange').val();
+        var fromDate = $('#fromDate').val();
+        var toDate = $('#toDate').val();
+
+        if (AjaxReq && AjaxReq.readyState !== 4)
+            AjaxReq.abort();
+        AjaxReq = $.ajax({
+            url: "/Customer/GetCustomers",
+            type: "GET",
+            data: {
+                pageIndex: customerPageIndex,
+                pageSize: pageSize,
+                searchString: searchString,
+                sortOrder: sortOrder,
+                dateRange: dateRange,
+                fromDate: fromDate,
+                toDate: toDate
+            },
+            success: function (data) {
+                $("#userListContainer").html(data);
+            }
+        })
+    }
+
+    $('#customerPageSize').change(function () {
+        customerPageIndex = 1;
+        GetFilteredCustomers();
+    });
+
+    $('#searchString').keyup(function () {
+        clearTimeout(debounceTimer);
+        customerPageIndex = 1;
+        debounceTimer = setTimeout(() => {
+            GetFilteredCustomers();
+        }, 400);
+    });
+
+    $("#PreviousCustomers").click(function () {
+        if (customerPageIndex > 1) {
+            customerPageIndex -= 1;
+            GetFilteredCustomers();
+        }
+    });
+
+    $('#NextCustomers').click(function () {
+        customerPageIndex += 1;
+        GetFilteredCustomers();
+    });
+
+    $(document).on('click', '.sortCustomers', function (e) {
+        e.preventDefault();
+        sortOrder = $(this).data('sort');
+        console.log(sortOrder);
+        customerPageIndex = 1;
+        GetFilteredCustomers();
+    });
+
+    $('.customer').click(function () {
+        var id = $(this).data('id');
+        console.log(id);
+        $.ajax({
+            url: "/Customer/GetCustomerDetails",
+            type: "GET",
+            data: { id: id },
+            success: function (data) {
+                $("#custoemrData").html(data);
+                console.log(data)
+                $("#CustomerModal").modal('show');
+            },
+            error: function () {
+                toastr.warning("Customer have not placed any Order");
+                return;
+            }
+        })
+    })
+</script>

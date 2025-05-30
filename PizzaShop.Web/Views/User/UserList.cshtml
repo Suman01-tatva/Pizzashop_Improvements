@@ -1,0 +1,97 @@
+@model PizzaShop.Entity.ViewModels.UserPageViewModel;
+@inject IHttpContextAccessor Accessor;
+@using Newtonsoft.Json;
+@using PizzaShop.Entity.ViewModels;
+@{
+    ViewData["Title"] = "UserList";
+    var count = Model.TotalUsers;
+    var pageIndex = Model.PageIndex;
+    var pageSize = Model.PageSize;
+    var totalPage = Model.TotalPage;
+    var searchString = Model.SearchString;
+    var totalUsers = Model.TotalUsers;
+    var permission =
+    JsonConvert.DeserializeObject<List<RolePermissionViewModel>>(Accessor.HttpContext.Session.GetString("permission"));
+}
+
+<div class="col-md-12">
+    <div class="d-flex align-items-center justify-content-between">
+        <h2 class="page-title">Users</h2>
+        <div class="d-flex" style="gap: 10px; margin-right: 12px;">
+            <div class="form-input-div d-flex justify-content-between me-3 position-relative">
+                <input type="text" placeholder="Search" class="form-control p-2 d-none d-sm-block" required
+                    id="searchString" />
+                <span class="form-input-icon position-absolute search-icon mx-2" style="margin-top: 12px;"><i
+                        class="fa-solid fa-search" id="eye-icon" style="color: gray"></i>
+                </span>
+            </div>
+            <a asp-action="CreateUser" asp-controller="User" style="text-decoration: none;"
+                class="d-@(permission[0].CanEdit == false ? "none" : "")">
+                <button class="border-0 p-2 fill-btn rounded shadow add-user-btn">
+                    <span class="span2">+</span>
+                    <span class="span1"><i class="fa-solid fa-plus" style="color: white;"></i> Add User</span>
+                </button>
+            </a>
+        </div>
+    </div>
+
+    <div id="userListContainer">
+        @await Html.PartialAsync("_UserListPartial", Model)
+    </div>
+</div>
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h1 class="modal-title fs-5" id="deleteModalLabel">Delete Confirmation</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="text-center">
+                <i class="fa-solid fa-triangle-exclamation fa-2xl" style="color: #FFD43B;"></i>
+            </div>
+            <div class="modal-body text-center p-1">
+                <p class="fw-bold mb-0">Are you sure you want to delete this user?</p>
+            </div>
+            <div class="modal-footer d-flex justify-content-center border-0">
+                <button type="button" class="fill-btn" id="confirmDeleteButton">Delete</button>
+                <button type="button" class="outline-btn" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        var debounceTimer;
+        var userPageIndex = @pageIndex;
+        var AjaxReq;
+        var deleteTableId;
+
+        function GetFilteredUsers(sortOrder = '', pageIndex = 1) {
+            var searchString = $('#searchString').val();
+            var pageSize = $('#userPageSize').val();
+            if (AjaxReq && AjaxReq.readyState !== 4)
+                AjaxReq.abort();
+            AjaxReq = $.ajax({
+                url: "/User/GetUsers",
+                type: "GET",
+                data: {
+                    pageIndex: userPageIndex,
+                    pageSize: pageSize,
+                    searchString: searchString
+                },
+                success: function (data) {
+                    $("#userListContainer").html(data);
+                }
+            })
+        }
+
+        function confirmDelete(userId, roleId) {
+            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            document.getElementById("confirmDeleteButton").onclick = function () {
+                document.getElementById(`deleteForm-${userId}-${roleId}`).submit();
+            };
+            modal.show();
+        }
+    </script>
+}

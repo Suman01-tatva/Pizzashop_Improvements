@@ -1,0 +1,88 @@
+@model PizzaShop.Entity.ViewModels.OrderAppMenuPageViewModel;
+<partial name="_ValidationScriptsPartial" />
+
+<div class="modal fade" id="customerDetailsModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-secondary">Customer Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-1">
+                <form class="p-3" id="updateCustomerForm" data-id="@Model.OrderDetails!.Customer!.Id">
+                    <input type="number" asp-for="@Model.OrderDetails!.Customer!.Id" id="customerId" hidden>
+                    <div class="row">
+                        <div class="form-floating  p-0 col">
+                            <input asp-for="@Model.OrderDetails!.Customer!.Name" type="text" id="customerName"
+                                class="form-control" placeholder="Name" />
+                            <label for="Name">Name*</label>
+                            <span asp-validation-for="@Model.OrderDetails!.Customer!.Name"
+                                class="text-danger ms-1"></span>
+                        </div>
+                    </div>
+                    <div class="row gap-3">
+                        <div class="form-floating  p-0 col">
+                            <input asp-for="@Model.OrderDetails!.Customer!.Phone" type="number" id="customerPhone"
+                                class="form-control" placeholder="Name" />
+                            <label for="Name">Mobile Number*</label>
+                            <span asp-validation-for="@Model.OrderDetails!.Customer!.Phone"
+                                class="text-danger ms-1"></span>
+                        </div>
+                        <div class="form-floating p-0 col">
+                            <input asp-for="@Model.OrderDetails!.Customer!.NoOfPerson" type="number" id="NoOfPerson"
+                                class="form-control" placeholder="Capacity" disabled>
+                            <label for="Capacity">No of Person*</label>
+                            <span asp-validation-for="@Model.OrderDetails!.Customer!.NoOfPerson"
+                                class="text-danger ms-1"></span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-floating  p-0 col">
+                            <input type="text" asp-for="@Model.OrderDetails!.Customer!.Email" class="form-control"
+                                id="customerEmail" placeholder="Email" autocomplete="off" disabled />
+                            <label for="Email">Email*</label>
+                            <ul id="customerList" class="customer-suggestion-list">
+
+                            </ul>
+                            <span asp-validation-for="@Model.OrderDetails!.Customer!.Email"
+                                class="text-danger ms-1 emailValidation"></span>
+                        </div>
+                    </div>
+                    <div class="modal-footer d-flex justify-content-end border-0 p-0">
+                        <button class="fill-btn" type="button" id="submitCustomerUpdateForm">Save</button>
+                        <button type="button" class="btn outline-btn" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $("#submitCustomerUpdateForm").click(function (event) {
+        var id = $('#customerId').val();
+        var mobileNumber = $('#customerPhone').val();
+        var name = $('#customerName').val();
+        if (mobileNumber.length != 10) {
+            console.log("dfasd")
+            $('#mobileNoValidation').html = "Plese enter valid mobile number"
+            return
+        }
+        $.ajax({
+            url: '/OrderAppMenu/UpdateCustomerDetails',
+            type: 'POST',
+            data: { id: id, name: name.trim(), mobileNumber: mobileNumber },
+            success: function (response) {
+                if (response.success) {
+                    toastr.success(response.message);
+                    console.log(response.message)
+                    $("#customerDetailsModal").modal('hide');
+                }
+                else {
+                    toastr.error(response.message);
+                }
+            },
+            error: handleAjaxError
+        })
+    });
+</script>

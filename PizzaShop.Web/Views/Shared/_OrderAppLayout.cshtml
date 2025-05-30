@@ -1,0 +1,210 @@
+@using System.Security.Claims;
+@inject IHttpContextAccessor Accessor;
+@using Newtonsoft.Json;
+@using PizzaShop.Entity.ViewModels;
+@{
+    var email = User?.FindFirst(ClaimTypes.Email)?.Value;
+    var role = User.FindFirst(ClaimTypes.Role)?.Value;
+    ViewData["Title"] = "OrderApp";
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString()?.ToLower();
+}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - PizzaShop</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/login.css" asp-append-version=" true" />
+    <link rel="stylesheet" href="~/css/user.css" asp-append-version=" true" />
+    <link rel="stylesheet" href="~/css/orderApp.css" asp-append-version=" true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="icon" type="image/x-icon" href="~/images/pizzashop_logo.png" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+    <!-- Option 1: Include in HTML -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
+    <!--  QRCode  -->
+    <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
+    <script src="~/js/orderApp.js" asp-append-version="true"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div class="row main-container">
+            <div class="col-lg-12 main-section p-0 bg-light">
+                <!-- navbar -->
+                <nav class="navbar navbar-expand-lg d-flex align-item-center justify-content-between py-0" id="NavBar">
+                    <div class="my-0 mx-2">
+                        <div class="d-flex flex-row justify-content-center align-item-center fs-3">
+                            <img src="~/images/pizzashop_logo.png" alt="pizashop-logo"
+                                class="img-responsive pizza-logo bg-white" />
+                            <div class="brand-name-nav text-white fs-5 mt-2 mx-2"><b>PIZZASHOP</b></div>
+                        </div>
+                    </div>
+                    <div class="mx-2 r-0 d-flex align-items-center">
+                        <div class="capsule-container">
+                            <a class="capsule @(currentController == "orderappkot" ? "active-navicon" : "")"
+                                href="@Url.Action("kot", "orderappkot")"><i class="bi bi-clipboard me-1"
+                                    style="color:white"></i>KOT</a>
+                            @if (role == "2")
+                            {
+                                <a class="capsule @(currentController == "orderappwaitinglist" ? "active-navicon" : "")"
+                                    href="@Url.Action("waitinglist", "orderappwaitinglist")">
+                                    <i class="bi bi-clock me-1" style="color:white"></i>WaitingToken</a>
+                                <a class="capsule @(currentController == "orderapptable" ? "active-navicon" : "")"
+                                    href="@Url.Action("table", "orderapptable")">
+                                    <i class="bi bi-square-fill me-1" style="color:white"></i>Table</a>
+                                <a class="capsule @(currentController == "orderappmenu" ? "active-navicon" : "")"
+                                    href="@Url.Action("menu", "orderappmenu")">
+                                    <img src="~/images/icons/menu-icon.svg" class="me-1" alt="">Menu</a>
+                            }
+                        </div>
+                        <div class="dropdown">
+                            <button class="capsule capsule-toggle" type="button" id="dropdownMenuButton"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-bars px-0"></i>
+                            </button>
+                            <ul class="dropdown-menu capsule-dropdown end-0 l-auto"
+                                aria-labelledby="dropdownMenuButton">
+                                <li><a class="dropdown-item" href="@Url.Action("kot", "orderappkot")"><i
+                                            class="bi bi-clipboard me-1"></i>KOT</a></li>
+                                @if (role == "2")
+                                {
+                                    <li><a class="dropdown-item" href="@Url.Action("waitinglist", "orderappwaitinglist")">
+                                            <i class="bi bi-clock-fill me-1"></i>WaitingToken</a></li>
+                                    <li><a class="dropdown-item" href="@Url.Action("table", "orderapptable")">
+                                            <i class="bi bi-square-fill me-1"></i>Table</a></li>
+                                    <li><a class="dropdown-item" href="@Url.Action("menu", "orderappmenu")">
+                                            <i class="fa-solid fa-monument me-2"></i>Menu</a></li>
+                                }
+                            </ul>
+                        </div>
+                        <a class="nav-link profile mx-2" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <img src="~/images/Default_pfp.svg.png" class="profile-avatar rounded-circle" alt="avatar"
+                                width="44" height="44">
+                        </a>
+                        <ul class="dropdown-menu end-0 l-auto">
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <img src="~/images/Default_pfp.svg.png" class="profile-avatar rounded-circle"
+                                        alt="avatar" width="44" height="44">
+                                    <samp id="userName"></samp>
+                                </a>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" asp-action="Profile" asp-controller="OrderApp"><i
+                                        class="fa fa-user-circle me-2" aria-hidden="true"></i>My Profile</a></li>
+                            <li><a class="dropdown-item" asp-action="ChangePassword" asp-controller="OrderApp">
+                                    <i class="fa-solid fa-rotate-right me-2"></i>Change Password</a>
+                            </li>
+                            @if (role == "2")
+                            {
+                                <li><a class="dropdown-item" asp-action="AdminDashboard" asp-controller="Home">
+                                        <i class="fa-solid fa-home me-2"></i>DashBoard</a>
+                                </li>
+                            }
+                            <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#LogoutModel"><i
+                                        class="fa fa-sign-out me-2" aria-hidden="true"></i>Logout</a></li>
+                        </ul>
+                    </div>
+                </nav>
+                <!-- main content -->
+                <div class="px-4 content">
+                    <main role="main" class="">
+                        @RenderBody()
+                    </main>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Modal -->
+    <div class="modal fade" id="LogoutModel" tabindex="-1" aria-labelledby="LogoutModel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="LogoutModel">
+                        Logout Confirmation
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="d-flex justify-content-center align-item-center mt-5 mb-3">
+                    <i class="fa-solid fa-triangle-exclamation fa-2xl" style="color: #ffd43b"></i>
+                </div>
+                <div class="modal-body d-flex justify-content-center">
+                    Are you sure you want to logout?
+                </div>
+                <div class="modal-footer d-flex justify-content-center">
+                    <a href="@Url.Action("Logout", "Auth")">
+                        <button type="button" class="fill-btn px-3 py-2 border-0 rounded" data-bs-dismiss="modal">
+                            Yes
+                        </button>
+                    </a>
+                    <button type="button" class="btn btn-outline-secondary border-btn px-3" data-bs-dismiss="modal">
+                        No
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js" asp-append-version="true"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        $(function () {
+            var message = '@Html.Raw(TempData["ToastrMessage"])';
+            var type = '@Html.Raw(TempData["ToastrType"])';
+            if (message.trim() !== '') {
+                switch (type) {
+                    case 'success':
+                        toastr.success(message)
+                        break;
+                    case 'error':
+                        toastr.error(message)
+                        break;
+                    case 'warning':
+                        toastr.warning(message)
+                        break;
+                    case 'info':
+                        toastr.info(message)
+                }
+            }
+        });
+        $(document).ready(function () {
+            $.ajax({
+                url: '/User/GetProfileDetail',
+                method: 'GET',
+                success: function (data) {
+                    if (data.profileImage != null) {
+                        imgPath = "/images/" + data.profileImage;
+                        $('.profile-avatar').attr('src', imgPath);
+                    }
+                    $('#userName').html(data.userName)
+                },
+                error: function () {
+                    console.error('Failed to load profile photo.');
+                }
+            });
+        })
+    </script>
+</body>
+
+</html>

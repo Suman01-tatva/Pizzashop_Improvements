@@ -1,0 +1,191 @@
+@model List<PizzaShop.Entity.ViewModels.MenuModifierGroupViewModel>
+@inject IHttpContextAccessor Accessor;
+@using Newtonsoft.Json;
+@using PizzaShop.Entity.ViewModels;
+@{
+    var permission =
+    JsonConvert.DeserializeObject<List<RolePermissionViewModel>>(Accessor.HttpContext!.Session.GetString("permission")!);
+}
+<div class="category-list">
+    @foreach (var modifierGroup in Model)
+    {
+        <div class="d-flex flex-wrap justify-content-between align-items-center item-category-btn p-2 my-2 modifierGroup"
+            data-id="@modifierGroup.Id">
+            <div class="category-btn border-0 bg-light">
+                <h6 class=" mb-0">
+                    <i class="fa-solid fa-grip-vertical"></i>
+                    @modifierGroup.Name
+                </h6>
+            </div>
+            <span
+                class="edit-delete-icon d-@((permission![2].CanEdit == false && permission[2].CanDelete == false) ? "none" : "")">
+                <a href="javascript:void(0);" data-id="@modifierGroup.Id"
+                    class="edit-btn editModifierGroup d-@(permission[2].CanEdit == false ? "none" : "")"
+                    style="text-decoration: none; color: inherit;">
+                    <i class="fa-solid fa-pencil m-1"></i>
+                </a>
+                <i class="fa-regular fa-trash-can mx-2 delete-modifiergroup d-@(permission[2].CanDelete == false ? "none" : "")"
+                    data-id="@modifierGroup.Id" id="deleteModifierGroup"></i>
+            </span>
+        </div>
+    }
+</div>
+
+<!-- Delete Modifier Group Modal -->
+<div class="modal fade" id="deleteModifierGroupModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Delete Confirmation</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="text-center">
+                <i class="fa-solid fa-triangle-exclamation fa-2xl" style="color: #FFD43B;"></i>
+            </div>
+            <div class="modal-body text-center p-1">
+                <p class="fw-bold mb-0">Are you sure you want to delete this modifiergroup?</p>
+            </div>
+            <div class="modal-footer d-flex justify-content-center border-0">
+                <button type="button" class="fill-btn" id="confirmDeleteModifierGroupBtn">Yes</button>
+                <button type="button" class="outline-btn" data-bs-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var modifierGroupId = @Model.First().Id;
+    var modifierGrpId;
+    var selectedModifiers = [];
+    $(document).on('click', '.delete-modifiergroup', function () {
+        modifierGrpId = $(this).data("id");
+        console.log("Delete", modifierGrpId)
+        $('#deleteModifierGroupModal').modal('show');
+    });
+
+    function GetFilteredModifiers() {
+        var SearchString = $("#searchModifier").val();
+        var pageSize = $("#pageSizeModifiers").val();
+        if (ajaxRequest && ajaxRequest.readyState !== 4) {
+            ajaxRequest.abort();
+        }
+        ajaxRequest = $.ajax({
+            url: "/Menu/GetModifiersByModifierGroup",
+            type: "GET",
+            data: {
+                modifierGroupId: modifierGrpId,
+                pageIndex: 1,
+                pageSize: 5,
+                searchString: SearchString
+            },
+            success: function (data) {
+                $("#modifierList").html(data);
+            }
+        })
+    }
+
+    $('#confirmDeleteModifierGroupBtn').click(function () {
+        console.log("ModifierGroupId :", modifierGrpId);
+        $.ajax({
+            url: '/Menu/DeleteModifierGroup',
+            type: 'POST',
+            data: { id: modifierGrpId },
+            success: function (response) {
+                if (response.success) {
+                    $('#deleteModifierGroupModal').modal('hide');
+                    GetFilteredModifiersGroup();
+                    modifierGrpId = @Model.First().Id;
+                    GetFilteredModifiers();
+                    $(".modifierGroup").first().addClass("active-new");
+                    $(".modifierGroup").click(function () {
+                        $(".modifierGroup").removeClass("active-new");
+                        $(this).addClass("active-new");
+                    });
+                    toastr.success(response.message);
+                }
+                else {
+                    toastr.success(response.message);
+                }
+            },
+            error: function (error) {
+                toastr.error('Error Occurred while delete the ModifierGroup')
+            }
+        })
+    });
+
+    function GetFilteredModifiersGroup() {
+        $.ajax({
+            url: "/Menu/GetAllModifierGroups",
+            type: "GET",
+            success: function (data) {
+                $("#modifierGroupList").html(data);
+            }
+        })
+    }
+
+    $(".modifierGroup").first().addClass("active-new");
+    $(".modifierGroup").click(function () {
+        $(".modifierGroup").removeClass("active-new");
+        $(this).addClass("active-new");
+    });
+
+    $('.modifierGroup').click(function () {
+        modifierGroupId = $(this).data("id");
+        console.log("ModifierGroupId :", modifierGroupId);
+        $.ajax({
+            url: '/Menu/GetModifiersByModifierGroup',
+            type: 'GET',
+            data: { modifierGroupId: modifierGroupId, pageSize: 5, pageIndex: 1, searchString: "" },
+            success: function (response) {
+                $('#searchModifier').val('');
+                $('#modifierList').html(response);
+            }
+        })
+    })
+
+    var editModifierGroupId;
+    $(".editModifierGroup").click(function () {
+        editModifierGroupId = $(this).data('id');
+
+        $.ajax({
+            url: '/Menu/EditModifierGroup',
+            type: 'GET',
+            data: { id: editModifierGroupId },
+            success: function (response) {
+                if (response.data != null) {
+                    $("#editModifierGroupName").val(response.data.name);
+                    $("#editModifierGroupDesc").val(response.data.description);
+                    var container = $(".selectedModifiersDisplay");
+                    container.empty(); // Clear previous selections
+                    selectedModifiers = [];
+                    response.data.modifiers.map(m => selectedModifiers.push({ Id: m.id, Name: m.name })); // Store selected IDs globally
+
+                    response.data.modifiers.forEach(mod => {
+                        // Display in the list with a cancel icon
+                        container.append(`
+                            <span class="badge bg-light border text-muted small d-inline-flex align-items-center me-2 p-2">
+                            ${mod.Name}
+                            <button type="button" class="btn btn-sm p-0 ms-2 text-secondary remove-modifier" data-id="${mod.Id}" style="border: none; background: none;">
+                            <i class="fa fa-close"></i>
+                            </button>
+                            </span>
+                        `);
+                    });
+                    updateSelectedModifiersUI();
+                    updateModifierCheckboxes();
+                    $('#editErrorMessage').html("");
+                    $('#editErrorMessage2').html("");
+                    $("#editModifierGroupModal").modal('show');
+                }
+            }
+        })
+    })
+
+    function updateModifierCheckboxes() {
+        selectedModifiers.forEach(m => {
+            console.log("checkbox", m)
+            $(`.modifier-checkbox[data-name='${m.Name}']`).prop("checked", true);
+        })
+    }
+</script>

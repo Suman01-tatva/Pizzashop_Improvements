@@ -1,0 +1,384 @@
+@{
+    ViewData["Title"] = "Menu";
+    Layout = "~/Views/Shared/_OrderAppLayout.cshtml";
+    var id = ViewContext.RouteData.Values["id"];
+    var OrderInstructions = "";
+    if (id != null)
+        OrderInstructions = @Model.OrderDetails!.OrderInstructions!.ToString();
+}
+@model PizzaShop.Entity.ViewModels.OrderAppMenuPageViewModel;
+
+<div class="d-flex remove-space">
+    <div class="bg-white d-none d-lg-block col-3 col-lg-2" style="height: 90vh;">
+        <div class="d-flex flex-column gap-2">
+            <h3 class="pt-3 ps-4" style="font-weight: 650;">Category</h3>
+            <div data-id="-1" class="ps-4 sidebar-btn menu-category py-1 fs-6 fw-medium">
+                Favourite Items
+            </div>
+            <div data-id="0" class="ps-4 sidebar-btn py-1 menu-category active-kot-sidebar-item fs-6 fw-medium">
+                All
+            </div>
+            @if (Model.CategoryList!.Count() > 0)
+            {
+                foreach (var c in Model.CategoryList!)
+                {
+                    <div data-id="@c.Id" class="ps-4 sidebar-btn py-1 menu-category fs-6 fw-medium">
+                        @c.Name
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="ps-4 sidebar-btn py-1">
+                    No Categories Available
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="w-100">
+        <div class="ms-3 mt-3 me-3" id="MenuItemsPartial">
+            <partial name="_MenuContent" model="Model" />
+        </div>
+    </div>
+</div>
+
+
+@* Category offcanvas *@
+<div class="offcanvas offcanvas-start" tabindex="-1" id="categoryOffcanvas" aria-labelledby="offcanvasExampleLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title fw-bold fs-3" id="offcanvasExampleLabel">Category</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div class="d-flex flex-column gap-2">
+            <div id="category-kot-favourite" class="ps-4 py-1 sidebar-btn menu-category" style="font-size: large;">
+                Favourite Items
+            </div>
+            <div id="category-kot-all" class="ps-4 py-1 sidebar-btn active-kot-sidebar-item menu-category"
+                style="font-size: large;">
+                All
+            </div>
+            @if (Model.CategoryList!.Count() > 0)
+            {
+                foreach (var c in Model.CategoryList!)
+                {
+                    <div data-id="@c.Id" class="ps-4 py-1 sidebar-btn menuOrderApp-category menu-category fs-6 fw-medium">
+                        @c.Name
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="ps-4 py-1">
+                    No Categories Available
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+
+
+@* complete order modal *@
+<div class="modal fade" id="CompleteOrderModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+    aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="staticBackdropLabel">Complete Confirmation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body d-flex flex-column align-items-center justify-content-center">
+                <img src="~/images/toppng.com-warning-icon-2400x2400.png" alt="alert-icon" id="alert-icon" />
+                <p>Are you sure you want to complete this order?</p>
+            </div>
+            <div class="modal-footer">
+                <button id="completeOrderButton" type="button" class="btn btn-primary px-3">Yes</button>
+                <a data-bs-dismiss="modal"><button type="button" class="btn btn-contrast px-3">No</button></a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@* Customer Rating Modal *@
+<div class="modal fade" id="CustomerRatingModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-3">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reviewModalLabel">Customer Review</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="mb-1 d-flex justify-content-between align-items-center">
+                    <label class="form-label d-block mb-1">Food</label>
+                    <div class="star-rating animated-stars" data-category="food">
+                        <input type="radio" id="food-star5" name="food-rating" value="5">
+                        <label for="food-star5" class="bi bi-star-fill"></label>
+                        <input type="radio" id="food-star4" name="food-rating" value="4">
+                        <label for="food-star4" class="bi bi-star-fill"></label>
+                        <input type="radio" id="food-star3" name="food-rating" value="3">
+                        <label for="food-star3" class="bi bi-star-fill"></label>
+                        <input type="radio" id="food-star2" name="food-rating" value="2">
+                        <label for="food-star2" class="bi bi-star-fill"></label>
+                        <input type="radio" id="food-star1" name="food-rating" value="1">
+                        <label for="food-star1" class="bi bi-star-fill"></label>
+                    </div>
+                </div>
+
+                <div class="mb-1 d-flex justify-content-between align-items-center">
+                    <label class="form-label d-block mb-1">Service</label>
+                    <div class="star-rating animated-stars" data-category="service">
+                        <input type="radio" id="service-star5" name="service-rating" value="5">
+                        <label for="service-star5" class="bi bi-star-fill"></label>
+                        <input type="radio" id="service-star4" name="service-rating" value="4">
+                        <label for="service-star4" class="bi bi-star-fill"></label>
+                        <input type="radio" id="service-star3" name="service-rating" value="3">
+                        <label for="service-star3" class="bi bi-star-fill"></label>
+                        <input type="radio" id="service-star2" name="service-rating" value="2">
+                        <label for="service-star2" class="bi bi-star-fill"></label>
+                        <input type="radio" id="service-star1" name="service-rating" value="1">
+                        <label for="service-star1" class="bi bi-star-fill"></label>
+                    </div>
+                </div>
+
+                <div class="mb-1 d-flex justify-content-between align-items-center">
+                    <label class="form-label d-block mb-1">Ambience</label>
+                    <div class="star-rating animated-stars" data-category="ambience">
+                        <input type="radio" id="ambience-star5" name="ambience-rating" value="5">
+                        <label for="ambience-star5" class="bi bi-star-fill"></label>
+                        <input type="radio" id="ambience-star4" name="ambience-rating" value="4">
+                        <label for="ambience-star4" class="bi bi-star-fill"></label>
+                        <input type="radio" id="ambience-star3" name="ambience-rating" value="3">
+                        <label for="ambience-star3" class="bi bi-star-fill"></label>
+                        <input type="radio" id="ambience-star2" name="ambience-rating" value="2">
+                        <label for="ambience-star2" class="bi bi-star-fill"></label>
+                        <input type="radio" id="ambience-star1" name="ambience-rating" value="1">
+                        <label for="ambience-star1" class="bi bi-star-fill"></label>
+                    </div>
+                </div>
+
+                <div class="border border-bottom border-warning mb-3"></div>
+                <!-- Comment Box -->
+                <div class="mb-3">
+                    <textarea id="comment" class="form-control" rows="3" placeholder="Comment"></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="fill-btn px-3" id="saveCustomerReview">Save</button>
+                <button type="button" class="outline-btn px-3" data-bs-dismiss="modal"
+                    id="cancelReviewBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* OrderWise Comment *@
+<div class="modal fade" id="OrderwiseCommentModal" tabindex="-1" aria-labelledby="staticBackdropLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered customer-review-modal-width">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-secondary">Order Wise Comments</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mt-3">
+                    <div class="form-floating col-12">
+                        <textarea class="form-control" placeholder="Leave a comment here"
+                            data-id="@Model.OrderDetails!.OrderId" id="orderCumments"
+                            style="height: 100px">@OrderInstructions</textarea>
+                        <label for="orderReviewByCustomer" class="ms-2">Comments</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-end">
+                <button type="button" class="fill-btn px-3" id="saveOrderComment">Save</button>
+                <button type="button" class="outline-btn px-3" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Item Wise Comment *@
+<div class="modal fade" id="ItemWiseCommentModal" tabindex="-1" aria-labelledby="staticBackdropLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered customer-review-modal-width">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-secondary">Item Wise Comments</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mt-3">
+                    <div class="form-floating col-12">
+                        <textarea class="form-control" placeholder="Leave a comment here"
+                            data-id="@Model.OrderDetails!.OrderId" id="itemCumments" style="height: 100px"></textarea>
+                        <label for="orderReviewByCustomer" class="ms-2">Comments</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-end">
+                <button type="button" class="fill-btn px-3" id="saveItemComment">Save</button>
+                <button type="button" class="outline-btn px-3" data-bs-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Delete OrderedItem Confirmation *@
+<div class="modal fade" id="deleteOrderedItemModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="deleteModalLabel">Deletion Confirmation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-1">
+                <i class="fa-solid fa-triangle-exclamation fa-2xl" style="color: #FFD43B;"></i>
+                <p class="fw-bold mb-0">
+                    Are you sure you want to delete this OrderedItem?
+                </p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="fill-btn" id="confirmDeleteOrderItem">Yes</button>
+                <button type="button" class="outline-btn" data-bs-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Complete Ordered Confirmation *@
+<div class="modal fade" id="completeOrderModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="deleteModalLabel">Complete Confirmation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-1">
+                <i class="fa-solid fa-triangle-exclamation fa-2xl" style="color: #FFD43B;"></i>
+                <p class="fw-bold mb-0">
+                    Are you sure you want to Complete Order?
+                </p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="fill-btn" id="completeOrderConfirm">Yes</button>
+                <button type="button" class="outline-btn" data-bs-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Delete OrderedItem Confirmation *@
+<div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="deleteModalLabel">Cancel Confirmation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-1">
+                <i class="fa-solid fa-triangle-exclamation fa-2xl" style="color: #FFD43B;"></i>
+                <p class="fw-bold mb-0">
+                    Are you sure you want to Cancel Order?
+                </p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="fill-btn" id="cancelOrderConfirm">Yes</button>
+                <button type="button" class="outline-btn" data-bs-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        var categoryId = 0;
+        var debounceTimer;
+        var itemType = "";
+        function GetMenuItems() {
+            console.log(itemType);
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetMenuItemsByCategoryId", "OrderAppMenu")',
+                data: {
+                    categoryId: categoryId,
+                    searchString: $("#searchOrderItems").val(),
+                    type: itemType
+                },
+                success: function (response) {
+                    $("#menuItemListDiv").html(response);
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error fetching menu items:", error);
+                }
+            });
+        }
+
+        $(".menu-category").click(function () {
+            categoryId = $(this).data("id");
+            $(".menu-category").removeClass("active-kot-sidebar-item");
+            $(this).addClass("active-kot-sidebar-item");
+            @* $("#searchOrderItems").val(''); *@
+                GetMenuItems();
+        });
+
+        $("#searchOrderItems").keyup(function () {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(function () {
+                GetMenuItems();
+            }, 400);
+        });
+
+        $('#veg').click(function () {
+            itemType = "veg";
+            GetMenuItems();
+        });
+
+        $('#nonveg').click(function () {
+            itemType = "nonveg";
+            GetMenuItems();
+        });
+
+        $(document).on("click", "#saveCustomerReview", function () {
+            const ratings = {};
+
+            ['food', 'service', 'ambience'].forEach(function (category) {
+                const selected = $(`input[name="${category}-rating"]:checked`).val();
+                ratings[category] = selected ? selected : null;
+            });
+            const comment = $('#comment').val();
+            console.log(ratings.food, ratings.ambience, ratings.service, comment);
+            let orderId = window.location.href;
+            let currentOrderId = orderId.split("/").pop();
+            console.log(currentOrderId);
+            $.ajax({
+                url: '@Url.Action("SaveCustomerFeedBack", "OrderAppMenu")',
+                type: 'POST',
+                data: {
+                    orderId: currentOrderId,
+                    food: ratings.food,
+                    service: ratings.service,
+                    ambience: ratings.ambience,
+                    comment: comment
+                },
+                success: function (response) {
+                    $("#CustomerRatingModal").modal('hide');
+                    window.location.reload();
+                    toastr.success(response.message);
+                },
+                error: function (error) {
+
+                }
+            })
+        })
+
+        $(document).on("click", "#cancelReviewBtn", function () {
+            window.location.href = "/OrderAppTable/Table";
+        })
+    </script>
+}

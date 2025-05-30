@@ -1,0 +1,130 @@
+:root {
+  --textBlue: #006098;
+  --bgColor: ;
+}
+
+.text-blue {
+  color: var(--textBlue);
+}
+
+.title {
+  color: var(--textBlue);
+  margin-left: 20px;
+}
+
+.search-icon {
+  right: 0;
+  margin-top: 8px;
+  margin-right: 6px;
+}
+
+.tab-link.active {
+  color: var(--textBlue) !important;
+  border-bottom: 2px solid var(--textBlue);
+}
+
+.tab-link:hover {
+  color: var(--textBlue) !important;
+}
+.tab-link {
+  color: black;
+  font-size: large;
+}
+
+.category-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.item-category-btn {
+  color: gray;
+  transition: 0.4s ease;
+}
+.item-category-btn:hover {
+  color: var(--textBlue);
+  background-color: white;
+}
+.item-category-btn:hover > .edit-delete-icon {
+  display: block;
+}
+.edit-delete-icon {
+  display: none;
+  height: 20px;
+}
+.edit-delete-icon > i {
+  cursor: pointer;
+}
+
+.category-btn-icon {
+  transform: rotate(90deg);
+  margin-right: 3px;
+}
+.menu-table > td {
+  display: flex !important;
+  justify-content: center;
+  margin: auto;
+  color: gray;
+}
+
+.dining-menu-icon {
+  height: 40px;
+  width: 40px;
+}
+
+/* Modifier */
+.modifier-table td {
+  height: 55px !important;
+  color: gray !important;
+  align-items: center;
+}
+
+.modifier-section {
+  height: 550px;
+}
+
+.veg-icon {
+  height: 20px;
+}
+
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.1) !important; /* Light opacity */
+}
+
+.bg-white {
+  background-color: white;
+}
+
+.active-new {
+  color: var(--textBlue) !important;
+  background-color: white;
+}
+
+.section-heading {
+  color: var(--textBlue);
+}
+
+@media (max-width: 767px) {
+  .left-section {
+    height: 200px;
+    overflow-y: auto;
+  }
+  .itemList-header {
+    display: flex;
+    flex-wrap: wrap !important;
+    background-color: white;
+  }
+}
+
+.modal.show .modal-dialog {
+  z-index: 1050;
+}
+
+#selectExistingModifierModal.show .modal-dialog {
+  z-index: 1060;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

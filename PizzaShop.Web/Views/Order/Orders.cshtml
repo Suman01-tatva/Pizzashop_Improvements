@@ -1,0 +1,235 @@
+@model PizzaShop.Entity.ViewModels.OrderPageViewModel;
+@inject IHttpContextAccessor Accessor;
+@using Newtonsoft.Json;
+@using PizzaShop.Entity.ViewModels;
+@{
+    ViewData["Title"] = "Orders";
+    var permission =
+    JsonConvert.DeserializeObject<List<RolePermissionViewModel>>(Accessor.HttpContext.Session.GetString("permission"));
+}
+@{
+    var PageSize = Model.PageSize;
+    var PageIndex = Model.PageIndex;
+    var TotalPage = Model.TotalPage;
+    var TotalOrders = Model.TotalOrders;
+    var Status = Model.Status;
+    var SearchString = Model.SearchString;
+    var SortColumn = Model.sortColumn;
+    var FromDate = Model.FromDate;
+    var ToDate = Model.ToDate;
+    var DateRange = Model.DateRange;
+}
+<div class="row my-1 mx-1 mt-3 d-flex align-items-center">
+    <div class="col-xl-3 col-12 d-flex justify-content-xl-start justify-content-center">
+        <h2 class="page-title">Orders</h2>
+    </div>
+
+    <div class="col-xl-9 mb-2 col-12 px-0">
+        <div class="row">
+            <div class="col-md-3 col-6">
+                <div class="form-input-div d-flex justify-content-between position-relative">
+                    <input type="text" placeholder="Search" class="form-control p-2 d-sm-block"
+                        style="height: 58px; border:1px solid #d3d3d3; border-radius: 5px;" required
+                        id="searchOrders" />
+                    <span class="form-input-icon position-absolute search-icon"><i class="fa-solid fa-search"
+                            style="margin-top: 12px; margin-right:5px" id="eye-icon" style="color: gray"></i>
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <select id="statusDropdown" aria-label="Default select example" class="form-control form-select"
+                    style="height: 58px; border:1px solid #d3d3d3; border-radius: 5px;">
+                    <option value="0" selected="@(Status == 0 ? true : false)" selected>All Status</option>
+                    <option value="1" selected="@(Status == 1 ? true : false)">Pending</option>
+                    <option value="2" selected="@(Status == 2 ? true : false)">Completed</option>
+                    <option value="3" selected="@(Status == 3 ? true : false)">InProgress</option>
+                    <option value="6" selected="@(Status == 6 ? true : false)">Canceled</option>
+                </select>
+            </div>
+
+            <div class="col-md-3 col-6 mt-md-0 mt-2">
+                <select id="dateRange" class="form-control form-select"
+                    style="height: 58px; border:1px solid #d3d3d3; border-radius: 5px;"
+                    aria-label="Default select example">
+                    <option value="AllTime" selected="@(DateRange == "AllTime" ? true : false)">All Time</option>
+                    <option value="Last7Days" selected="@(DateRange == "Last7Days" ? true : false)">Last Week</option>
+                    <option value="Last30Days" selected="@(DateRange == "Last30Days" ? true : false)">Last Month
+                    </option>
+                    <option value="CurrentMonth" selected="@(DateRange == "CurrentMonth" ? true : false)">Current Month
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-3 col-6 mt-md-0 mt-2">
+                <button type="button" class="fill-btn w-100" id="export"
+                    style="height: 58px; border:1px solid #d3d3d3; border-radius: 5px;">
+                    <span><i class="fa-solid fa-share-from-square me-1"></i></span>
+                    <span>Export</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row d-flex justify-content-md-end mx-1">
+    <div class="col-xl-8 col-12 px-0">
+        <div class="row">
+            <div class="col-md-4 col-12 form-floating">
+                <input value="@FromDate" type="date" class="form-control DateStyle" placeholder="rate" id="fromDate" />
+                <label for="rate" class="labelCSS mx-2">From Date</label>
+            </div>
+            <div class="col-md-4 mt-md-0 mt-2 col-12 form-floating ">
+                <input type="date" value="@ToDate" class="form-control DateStyle" placeholder="rate" id="toDate" />
+                <label for="rate" class="labelCSS mx-2">To Date</label>
+            </div>
+            <div class="col-md-2 col-6 mt-md-0 mt-2">
+                <button type="button" class="fill-btn w-md-0 w-100"
+                    style="height: 58px; border:1px solid #d3d3d3; border-radius: 5px;"
+                    id="searchDateRange">Search</button>
+            </div>
+            <div class="col-md-2 col-6 mt-md-0 mt-2">
+                <button type="button" class="border-btn w-100"
+                    style="height: 58px; border:2px solid; border-radius: 5px;" id="clearBtn">Clear</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<section id="orderList">
+    <partial name="_OrderTablePartial" model="Model"></partial>
+</section>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var pageIndex = @PageIndex, pageSize = 5, searchString = "", sortColumn = "@SortColumn", isAsc = true, status = 0, fromDate = "", toDate = "", dateRange = "AllTime";
+            var ajaxRequest;
+            var debounceTimer;
+
+            function GetFilteredOrders() {
+                var SearchString = $("#searchOrders").val();
+                var pageSize = $("#ordersPageSize").val();
+                var status = $("#statusDropdown").val();
+                var dateRange = $("#dateRange").val();
+                var fromDate = $("#fromDate").val();
+                var toDate = $("#toDate").val();
+
+                if (ajaxRequest && ajaxRequest.readyState !== 4) {
+                    ajaxRequest.abort();
+                }
+                ajaxRequest = $.ajax({
+                    url: "/Order/GetOrders",
+                    type: "GET",
+                    data: {
+                        searchString: SearchString,
+                        pageIndex: pageIndex,
+                        pageSize: pageSize,
+                        sortColumn: sortColumn,
+                        isAsc: isAsc,
+                        status: status,
+                        fromDate: fromDate,
+                        toDate: toDate,
+                        dateRange: dateRange
+                    },
+                    success: function (data) {
+                        @* console.log(data) *@
+                            $("#orderList").html(data);
+                    }
+                })
+            }
+
+            $('#statusDropdown').change(function () {
+                var pageIndex = 1;
+                @* console.log("Status DropDown"); *@
+                    GetFilteredOrders();
+            })
+
+            $('#dateRange').change(function () {
+                var pageIndex = 1;
+                $("#fromDate").val('');
+                $("#toDate").val('');
+                @* console.log("DateRange DropDown"); *@
+                    GetFilteredOrders();
+            })
+
+            $('#searchDateRange').click(function () {
+                var pageIndex = 1;
+                $("#dateRange").val("AllTime")
+                @* console.log("From To dates DropDown"); *@
+                    GetFilteredOrders();
+            })
+
+            $('#clearBtn').click(function () {
+                status = 0;
+                fromDate = "";
+                toDate = "";
+                dateRange = "AllTime";
+                searchString = "";
+                pageIndex = 1;
+                pageSize = 5;
+
+                $("#searchOrders").val("");
+                $("#ordersPageSize").val("5");
+                $("#statusDropdown").val("0");
+                $("#dateRange").val("AllTime");
+                $("#fromDate").val("");
+                $("#toDate").val("");
+
+                GetFilteredOrders();
+            });
+            $("#export").click(function () {
+                var SearchString = $("#searchOrders").val();
+                var pageSize = $("#ordersPageSize").val();
+                var status = $("#statusDropdown").val();
+                var dateRange = $("#dateRange").val();
+                var fromDate = $("#fromDate").val();
+                var toDate = $("#toDate").val();
+                var params = {
+                    searchString: SearchString,
+                    pageIndex: pageIndex,
+                    pageSize: pageSize,
+                    sortColumn: sortColumn,
+                    isAsc: isAsc,
+                    status: status,
+                    fromDate: fromDate,
+                    toDate: toDate,
+                    dateRange: dateRange
+                };
+                var url = '@Url.Action("ExportToExcel", "Order")';
+
+                if (url == null) {
+                    toastr.error("No Records Found");
+                    return;
+                }
+
+                // Make an AJAX call to check for records and handle response
+                $.ajax({
+                    url: url,
+                    type: "GET",
+                    data: params,
+                    success: function (response) {
+                        if (response.success === false) {
+                            toastr.warning(response.message);
+                        } else {
+                            var queryString = $.param(params);
+                            window.location.href = url + '?' + queryString;
+                        }
+                    },
+                    error: function () {
+                        toastr.error("An error occurred while exporting the file.");
+                    }
+                });
+            });
+
+            $("#fromDate").change(function () {
+                fromDate = $(this).val();
+                document.getElementById("toDate").setAttribute("min", fromDate);
+            })
+
+            $("#toDate").change(function () {
+                toDate = $(this).val();
+                document.getElementById("fromDate").setAttribute("max", toDate);
+            })
+        })
+    </script>
+}

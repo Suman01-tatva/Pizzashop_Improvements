@@ -1,0 +1,258 @@
+@model PizzaShop.Entity.ViewModels.AssignTablePageViewModel;
+<partial name="_ValidationScriptsPartial" />
+
+<!-- Sidebar Offcanvas -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="assignSidebar" aria-labelledby="assignSidebarLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="assignSidebarLabel">Waiting List</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"></button>
+    </div>
+
+    <!-- Waiting Token List -->
+    <div class="px-3">
+        <div class="table-responsive mb-3">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th></th>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>No. of Persons</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var i in Model.WaitingTokenList!)
+                    {
+                        <tr>
+                            <td class="text-center">
+                                <input class="form-check-input waiting-radio" data-item='@Html.Raw(Json.Serialize(i))'
+                                    type="radio" name="waitingToken" value="@i.CustomerId" />
+                            </td>
+                            <td>#@i.CustomerId</td>
+                            <td>@i.CustomerName</td>
+                            <td>@i.NoOfPeople</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+
+    <!-- Customer Form -->
+    <form action="" id="customerDetailForm">
+        <div class="offcanvas-body pt-0">
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" asp-for="CustomerEmail" class="form-control" id="customerEmail" name="CustomerEmail"
+                    placeholder="Email" />
+                <ul id="customerList" class="customer-suggestion-list"></ul>
+
+                </ul>
+                <span class="text-danger emailValidation" asp-validation-for="CustomerEmail"></span>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Name</label>
+                <input type="text" asp-for="CustomerName" class="form-control" id="customerName" name="CustomerName"
+                    placeholder="Name" />
+                <span class="text-danger" asp-validation-for="CustomerName"></span>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Mobile Number</label>
+                <input type="text" asp-for="MobileNumber" class="form-control" id="customerMobile" name="MobileNumber"
+                    name="MobileNumber" placeholder="Mobile Number" />
+                <span class="text-danger" asp-validation-for="MobileNumber"></span>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="customerPersons" class="form-label">No. of Persons</label>
+                    <input type="number" asp-for="NoOfPerson" class="form-control" name="NoOfPerson"
+                        id="customerPersons" placeholder="No Of Persons" />
+                    <span class="text-danger" asp-validation-for="NoOfPerson"></span>
+                </div>
+                <div class="col-md-6">
+                    <label for="customerSection" class="form-label">Section</label>
+                    <select class="form-select" id="customerSection" name="SectionId" disabled>
+                        @foreach (var item in Model.SectionList!)
+                        {
+                            if (item.Id == Model.SectionId)
+                            {
+                                <option value="@item.Id" selected>@item.Name</option>
+                            }
+                            else
+                            {
+                                <option value="@item.Id">@item.Name</option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="d-flex justify-content-end gap-2">
+                <button class="fill-btn assignBtn" type="submit">Assign</button>
+                <button class="outline-btn" type="button" data-bs-dismiss="offcanvas">Cancel</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+<script>
+    var tokenId = null;
+    var customerId = null;
+    var noOfPerson = null;
+    var debounceTimer;
+
+    $(document).ready(function () {
+        $('.waiting-radio').on('change', function () {
+            const itemData = $(this).data('item');
+            tokenId = itemData.id;
+            customerId = itemData.customerId;
+            noOfPerson = itemData.noOfPeople;
+            console.log(itemData)
+            if (itemData) {
+                $('#customerEmail').val(itemData.customerEmail || '');
+                $('#customerName').val(itemData.customerName || '');
+                $('#customerMobile').val(itemData.mobileNumber || '');
+                $('#customerPersons').val(itemData.noOfPeople || '');
+                $('#customerSection').val(itemData.sectionId || '');
+
+                $('#customerEmail').prop('disabled', true);
+                $('#customerName').prop('disabled', true);
+                $('#customerMobile').prop('disabled', true);
+                $('#customerPersons').prop('disabled', true);
+                $('#customerSection').prop('disabled', true);
+            }
+        });
+
+        function validateCustomerForm() {
+            const email = $('#customerEmail').val().trim();
+            const name = $('#customerName').val().trim();
+            const mobile = $('#customerMobile').val().trim();
+            const persons = $('#customerPersons').val().trim();
+            const section = $('#customerSection').val().trim();
+
+            // Check if all fields are filled
+            if (email && name && mobile && persons && section) {
+                $('.assignBtn').prop('disabled', false);
+            } else {
+                $('.assignBtn').prop('disabled', true);
+            }
+        }
+
+        // Event listeners for form input changes
+        $('#customerEmail, #customerName, #customerMobile, #customerPersons, #customerSection, .waiting-radio').on('input change', function () {
+            validateCustomerForm();
+        });
+
+        validateCustomerForm();
+
+        $('#customerDetailForm').submit(function (event) {
+            event.preventDefault();
+            var form = $("#customerDetailForm")[0];
+            var formData = new FormData(form);
+            console.log(formData);
+            var isTableArrangedProperly = checkTableArrangedProperly(tableDetailList);
+            if (!isTableArrangedProperly)
+                return;
+
+            console.log(JSON.stringify(selectedTableIds));
+            formData.append("tableIds", JSON.stringify(tableDetailList))
+            formData.append("customerId", JSON.stringify(customerId))
+            formData.append("customerName", $('#customerName').val())
+            formData.append("customerEmail", $('#customerEmail').val())
+            formData.append("mobileNumber", $('#customerMobile').val())
+            formData.append("noOfPerson", JSON.stringify(noOfPerson))
+            formData.append("sectionId", JSON.stringify(selectedSectionId))
+            formData.append("waitingTokenId", JSON.stringify(tokenId))
+
+            $.ajax({
+                url: '/OrderAppTable/AssignTable',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    if (response.success == true) {
+                        window.location.href = `/orderappmenu/menu/${response.id}`;
+                        toastr.success(response.message);
+                    }
+                    else {
+                        if (response.message == "Customer Have Already Running Order") {
+                            window.location.href = `/orderappmenu/menu/${response.id}`;
+                            toastr.success(response.message);
+                            return;
+                        }
+                        toastr.error(response.message);
+                    }
+                },
+                error: handleAjaxError
+            });
+        });
+
+        function searchCustomer() {
+            var emailString = $("#customerEmail").val();
+            $.ajax({
+                url: '/OrderAppWaitingList/GetCustomerSuggestion',
+                type: 'GET',
+                data: { email: emailString },
+                success: function (response) {
+                    if (response.isSuccess) {
+                        $("#customerList").empty();
+                        for (let i = 0; i < response.customerSuggestions.length; i++) {
+                            var li = $("<li></li>");
+                            var email = $("<p></p>").text(response.customerSuggestions[i].email);
+                            var name = $("<p></p>").text(response.customerSuggestions[i].name);
+                            var phone = $("<p></p>").text(response.customerSuggestions[i].phone);
+                            li.append(email, name, phone)
+                            @* li.append(name)
+                            li.append(phone) *@
+                                li.click(function () {
+                                    $("#customerEmail").val(response.customerSuggestions[i].email);
+                                    $("#customerName").val(response.customerSuggestions[i].name);
+                                    $("#customerMobile").val(response.customerSuggestions[i].phone);
+                                    $("#customerList").empty();
+                                    $("#WaitingTokenForm input[name='CustomerId']").val(response.customerSuggestions[i].id);
+                                    // Clear email validation error
+                                    $(".emailValidation").text("");
+                                    $("#customerEmail").removeClass("input-validation-error");
+                                });
+                            $("#customerList").append(li);
+                        }
+
+                    }
+                },
+                error: function (error) {
+                    toastr.error(error.message);
+                }
+            })
+
+        }
+
+        $("#customerEmail").keyup(function () {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                searchCustomer()
+            }, 400)
+        })
+
+        function checkTableArrangedProperly(tableIds) {
+            var noOfPersons = $("#customerPersons").val();
+            console.log(noOfPerson);
+            console.log(tableDetailList);
+            var tableCapacity = 0;
+            for (let i = 0; i < tableDetailList.length; i++) {
+                tableCapacity += tableDetailList[i].capacity;
+                if (tableCapacity >= parseInt(noOfPersons) && i < tableDetailList.length - 1) {
+                    toastr.error("Please pick a smaller table or less tables");
+                    return false;
+                }
+            }
+            if (tableCapacity < parseInt(noOfPersons)) {
+                toastr.error("Please pick a bigger table or more tables");
+                return false;
+            }
+            return true;
+        }
+    });
+</script>

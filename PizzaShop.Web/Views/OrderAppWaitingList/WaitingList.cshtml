@@ -1,0 +1,121 @@
+@model PizzaShop.Entity.ViewModels.WaitingTokenListPageViewModel;
+@{
+    ViewData["Title"] = "WaitingList";
+    Layout = "~/Views/Shared/_OrderAppLayout.cshtml";
+}
+
+<section>
+    <div class="row mb-2">
+        <div class="col-md-8 d-flex justify-content-start justify-content-md-start align-items-center mt-3">
+            <h2 class="textBlue ">Waiting List</h2>
+        </div>
+        <div class="col-md-4 d-flex justify-content-center justify-content-md-end align-items-center">
+            <button type="button" class="btn btn-outline-primary my-3" id="createWaitingToken">
+                <i class="fa-solid fa-plus me-1"></i>Waiting Token
+            </button>
+        </div>
+    </div>
+
+    <nav class="bg-light p-2 shadow" id="wtSectionList">
+        @Html.Partial("_SectionList", @Model.SectionList)
+    </nav>
+
+    <section class="shadow bg-white mt-3 p-3">
+        <div class="" id="waitingListContainer">
+            @Html.Partial("_WaitingTokenList", @Model.WaitingList)
+        </div>
+    </section>
+</section>
+
+<div id="WaitingTokenContainer"></div>
+<div id="AssignWaitingTokenContainer"></div>
+
+<!-- Delete Waiting Token Modal -->
+<div class="modal fade" id="deleteWtModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Delete Confirmation</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="text-center">
+                <i class="fa-solid fa-triangle-exclamation fa-2xl" style="color: #FFD43B;"></i>
+            </div>
+            <div class="modal-body text-center p-1">
+                <p class="fw-bold mb-0">Are you sure you want to delete this WaitingToken?</p>
+            </div>
+            <div class="modal-footer d-flex justify-content-center border-0">
+                <button type="button" class="fill-btn" id="confirmDeleteWtBtn">Yes</button>
+                <button type="button" class="outline-btn" data-bs-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var WtSectionId = 0;
+    var deleteWtId;
+    $("#createWaitingToken").click(function () {
+
+        $.ajax({
+            url: '@Url.Action("AddEditWaitingToken", "OrderAppWaitingList")',
+            type: 'GET',
+            data: { id: null },
+            success: function (response) {
+                $("#WaitingTokenContainer").html(response);
+                $("#addEditWaitingListModal").modal('show');
+            },
+            error: function (error) {
+                toastr.error(error.message);
+            }
+        })
+    })
+
+
+    function GetSections() {
+        $.ajax({
+            url: '@Url.Action("GetSectionList", "OrderAppWaitingList")',
+            type: 'GET',
+            success: function (response) {
+                $("#wtSectionList").html(response);
+            },
+            error: function (error) {
+                toastr.error(error.message);
+            }
+        })
+    }
+
+    function GetWaitingTokens() {
+        $.ajax({
+            url: '@Url.Action("GetWaitingListBySectionId", "OrderAppWaitingList")',
+            type: 'GET',
+            data: { id: WtSectionId },
+            success: function (response) {
+                $("#waitingListContainer").html(response);
+            },
+            error: function (error) {
+                toastr.error(error.message);
+            }
+        })
+    }
+
+    $(document).on('click', "#confirmDeleteWtBtn", function () {
+        console.log(deleteWtId);
+        $.ajax({
+            url: '@Url.Action("DeleteWaitingToken", "OrderAppWaitingList")',
+            type: 'POST',
+            data: { id: deleteWtId },
+            success: function (response) {
+                if (response.isSuccess) {
+                    toastr.success(response.message);
+                    $("#deleteWtModal").modal('hide');
+                    GetWaitingTokens();
+                    GetSections();
+                }
+                else
+                    toastr.error(response.message);
+            },
+            error: handleAjaxError
+        })
+    });
+</script>

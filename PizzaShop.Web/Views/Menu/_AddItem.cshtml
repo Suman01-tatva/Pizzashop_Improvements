@@ -1,0 +1,277 @@
+@model PizzaShop.Entity.ViewModels.MenuItemViewModel;
+<partial name="_ValidationScriptsPartial" />
+
+<div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="AddItemModelLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h1 class="modal-title fs-5" id="AddItemModelLabel">
+                    Add New MenuItem
+                </h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body text-center p-3">
+                <form id="addItemForm" enctype="multipart/form-data" method="post">
+                    <div class="row p-2">
+                        <div class="col-md-7">
+                            <div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <select class="form-select" id="" asp-for="CategoryId" name="CategoryId">
+                                                <option value="">Select Categories</option>
+                                                @foreach (var categories in Model.Categories!)
+                                                {
+                                                    <option value="@categories.Id">@categories.Name</option>
+                                                }
+                                            </select>
+                                            <label for="categories">Categories*</label>
+                                            <span class="text-danger ms-2" asp-validation-for="CategoryId"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control" id="Name" placeholder="name"
+                                                asp-for="Name" name="Name" />
+                                            <label for="name">Name*</label>
+                                            <span class="text-danger ms-2" asp-validation-for="Name"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-floating">
+                                                    <select class="form-select" id="select-role" asp-for="Type"
+                                                        name="Itemtype">
+                                                        <option value="" disabled selected>ItemType</option>
+                                                        <option value="true">Veg</option>
+                                                        <option value="false">Non-Veg</option>
+                                                    </select>
+                                                    <label for="itemType">Item Type*</label>
+                                                    <span class="text-danger ms-2" asp-validation-for="Type"></span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-floating ">
+                                                    <input type="number" step="0.01" pattern="^\d+(?:\.\d{1,2})?$"
+                                                        class="form-control" id="rate" placeholder="
+                                                    Rate" asp-for="Rate" name="Rate" />
+                                                    <label for="Rate">Rate*</label>
+                                                    <span class="text-danger ms-2" asp-validation-for="Rate"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="row">
+
+                                            <div class="col-md-6">
+                                                <div class="form-floating">
+                                                    <input type="number" class="form-control" id="Quantity"
+                                                        name="Quantity" placeholder="Quantity" asp-for="Quantity" />
+                                                    <label for="Quantity">Quantity*</label>
+                                                    <span class="text-danger ms-2" asp-validation-for="Quantity"></span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-floating">
+                                                    <select class="form-select" id="Unit" asp-for="UnitId"
+                                                        name="Unitid">
+                                                        <option value="">Select Units</option>
+                                                        @foreach (var unit in Model.Units!)
+                                                        {
+                                                            <option value="@unit.Id">@unit.Name</option>
+                                                        }
+                                                    </select>
+                                                    <label for="Unit">Unit*</label>
+                                                    <span class="text-danger ms-2" asp-validation-for="UnitId"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="row d-flex justify-content-center align-items-center">
+                                            <div class="form-check form-switch mb-0 col-md-6">
+                                                <input type="checkbox" class="form-check-input mt-0 large-switch"
+                                                    asp-for="IsAvailable" value="true" name="Isavailable" />
+                                                <input type="hidden" value="false" />
+                                                <label for="">Available</label>
+                                                <span class="text-danger ms-2" asp-validation-for="IsAvailable"></span>
+                                            </div>
+                                            <div class="form-check form-switch mb-0 col-md-6">
+                                                <input type="checkbox" class="form-check-input mt-0 large-switch"
+                                                    asp-for="IsDefaultTax" value="true" name="Isdefaulttax" />
+                                                <input type="hidden" value="false" />
+                                                <label for="">DefaultTax</label>
+                                                <span class="text-danger ms-2" asp-validation-for="IsDefaultTax"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-floating">
+                                                    <input type="number" step=".01" class="form-control"
+                                                        id="texPercentage" asp-for="TaxPercentage"
+                                                        placeholder="texPercentage" name="Taxpercentage" />
+                                                    <label for="texPercentage">Tax Percentage</label>
+                                                    <span class="text-danger ms-2"
+                                                        asp-validation-for="TaxPercentage"></span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-floating">
+                                                    <input type="text" class="form-control" id="shortCode"
+                                                        asp-for="ShortCode" placeholder="shortCode" name="Shortcode" />
+                                                    <label for="shortCode">Short Code </label>
+                                                    <span class="text-danger ms-2"
+                                                        asp-validation-for="ShortCode"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="form-floating">
+                                    <textarea class="form-control" id="floatingTextarea" asp-for="Description"
+                                        name="Description"></textarea>
+                                    <label for="floatingTextarea">Description</label>
+                                    <span class="text-danger ms-2" asp-validation-for="Description"></span>
+                                </div>
+                            </div>
+                            <div class="mb-3 upload-container d-flex flex-col">
+                                <label for="imageInput" class="mx-1">
+                                    <img src="~/images/cloud-upload.svg" alt="upload-icon" class="mx-4" />
+                                    <br />
+                                    Browse File
+                                </label>
+                                <input id="imageInput" asp-for="ProfileImagePath" type="file" onchange="showFileName()"
+                                    name="ProfileImagePath" accept="image/*" class="input-file" hidden />
+                                <span id="file-upload-name"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-5 border rounded-3 p-2" style="background-color: rgb(255, 238, 190);">
+                            <div>
+                                <select class="form-select" aria-label="Default select example" id="ModifierGroups">
+                                    <option value="" selected>Select ModifierGroup</option>
+                                    @foreach (var mg in Model.ModifierGroups!)
+                                    {
+                                        <option value="@mg.Id">@mg.Name</option>
+                                    }
+                                </select>
+                            </div>
+                            <span class="text-danger ms-2"></span>
+
+                            <div id="listModifiers">
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button class="fill-btn me-2" type="submit" id="addItemBtn">Save</button>
+                        <button class="outline-btn" type="button" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    var modifiersGrpId = [];
+    $("#ModifierGroups").change(function () {
+        var id = $(this).val();
+        var label = $("#ModifierGroups option:selected").text();
+        if (modifiersGrpId.includes(id)) { return; }
+        $.ajax({
+            url: '@Url.Action("GetModifiersByGroup", "Menu")',
+            type: 'GET',
+            data: { id: id, name: label },
+            success: function (response) {
+                @* console.log(response); *@
+                    modifiersGrpId.push(id);
+                console.log(modifiersGrpId);
+                $("#listModifiers").append(response);
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        });
+    });
+
+    $(document).on("click", ".remove-modifier", function () {
+        var id = $(this).data("id");
+        modifiersGrpId = modifiersGrpId.filter(m => m != id);
+        console.log(modifiersGrpId);
+        $("#modifier-group-" + id).remove();
+    });
+    $("#addItemForm").submit(function (event) {
+        event.preventDefault();
+        var form = $("#addItemForm")[0];
+        var formData = new FormData(form);
+        var modifiers = [];
+        $("#listModifiers .modifier-group").each(function () {
+            var name = $(this).find(".modifierGrp-name").data("name");
+            var modifierGroupId = $(this).find(".modifierGrp-name").data("id");
+            var minValue = parseInt($(this).find(".min-value").val(), 10);
+            var maxValue = parseInt($(this).find(".max-value").val(), 10);
+
+            modifiers.push({
+                ModifierGroupId: modifierGroupId,
+                Name: name,
+                Minselectionrequired: minValue,
+                Maxselectionrequired: maxValue
+            });
+        });
+
+        formData.append("ItemModifiers", JSON.stringify(modifiers));
+
+        $.ajax({
+            url: '/Menu/AddItem',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                if (response.isSuccess) {
+                    toastr.success(response.message);
+                    $("#addItemModal").modal("hide");
+                    GetFilteredItems()
+                } else {
+                    if (response.isValid == false) {
+                        toastr.warning(response.message);
+                    }
+                    else {
+                        toastr.error(response.message)
+                    }
+                }
+            },
+            error: function (error) {
+                toastr.error(response.message);
+            }
+        });
+    });
+
+    function showFileName() {
+        var input = document.getElementById('imageInput');
+        var fileNameSpan = document.getElementById('file-upload-name');
+        if (input.files && input.files[0]) {
+            fileNameSpan.textContent = input.files[0].name;
+            fileNameSpan.style.display = 'block';
+        } else {
+            fileNameSpan.style.display = 'none';
+        }
+    }
+</script>

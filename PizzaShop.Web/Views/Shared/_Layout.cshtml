@@ -1,0 +1,243 @@
+﻿@using System.Security.Claims;
+@inject IHttpContextAccessor Accessor;
+@using Newtonsoft.Json;
+@using PizzaShop.Entity.ViewModels;
+@{
+    var email = User.FindFirst(ClaimTypes.Email)?.Value;
+    var role = User.FindFirst(ClaimTypes.Role)?.Value;
+    var permissionString = Accessor.HttpContext.Session.GetString("permission");
+    var permission = string.IsNullOrEmpty(permissionString)
+    ? new List<RolePermissionViewModel>()
+    : JsonConvert.DeserializeObject<List<RolePermissionViewModel>>(permissionString);
+    ViewData["Title"] = "Dashboard";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - PizzaShop</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/login.css" asp-append-version=" true" />
+    <link rel="stylesheet" href="~/css/user.css" asp-append-version=" true" />
+    <link rel="stylesheet" href="~/css/menu.css" asp-append-version=" true" />
+    <link rel="stylesheet" href="~/css/tax.css" asp-append-version=" true" />
+    <link rel="stylesheet" href="~/css/order.css" asp-append-version=" true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="icon" type="image/x-icon" href="~/images/pizzashop_logo.png" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
+    <script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div class="row main-container">
+            <!-- sidebar -->
+            <div class="col-lg-2 offcanvas-lg offcanvas-start sidebar" id="sidebar">
+                <div class="d-flex flex-row justify-content-center align-item-center mt-2 fs-3">
+                    <img src="~/images/pizzashop_logo.png" alt="pizashop-logo" class="img-responsive pizza-logo" />
+                    <div class="fs-5 mt-2"><b class="brand-name">PIZZASHOP</b></div>
+                    <button class="btn btn-close close-btn" type="button" data-bs-toggle="offcanvas"
+                        data-bs-target="#sidebar" aria-controls="offcanvasWithBothOptions"></button>
+                </div>
+                <ul class="nav d-flex justify-content-between align-items-left flex-column mt-4">
+                    <a asp-action="AdminDashboard" asp-controller="Home" class="nav-item">
+                        <li class="sidebar-active cursor-pointer">
+                            <i class="fa-solid fa-table-cells-large me-2"></i>
+                            Dashboard
+                        </li>
+                    </a>
+                    <a asp-action="UserList" asp-controller="User"
+                        class="nav-item  d-@(permission.Count > 0 && permission[0].CanView == false ? "none" : "")">
+                        <li class="nav-item">
+                            <i class="fa-solid fa-users me-2"></i> Users
+                        </li>
+                    </a>
+                    <a asp-action="Role" asp-controller="RolePermission"
+                        class="nav-item  d-@(permission.Count > 1 && permission[1].CanView == false ? "none" : "")">
+                        <li class="nav-item">
+                            <i class="fas fa-user-cog me-2"></i>Role and Permission
+                        </li>
+                    </a>
+                    <a asp-action="Menu" asp-controller="Menu"
+                        class="nav-item  d-@(permission.Count > 2 && permission[2].CanView == false ? "none" : "")">
+                        <li class=" nav-item">
+                            <img src="~/images/icons/menu-icon1.svg" class="me-2" alt="">Menu
+                        </li>
+                    </a>
+                    <a asp-action="TableSection" asp-controller="TableSection"
+                        class="nav-item  d-@(permission.Count > 3 && permission[3].CanView == false ? "none" : "")">
+                        <li class="nav-item">
+                            <i class="fa-solid fa-square me-2"></i> Table and
+                            Section
+                        </li>
+                    </a>
+                    <a href="/TaxAndFee/TaxAndFee"
+                        class="nav-item  d-@(permission.Count > 4 && permission[4].CanView == false ? "none" : "")">
+                        <li class="nav-item">
+                            <i class="fa-solid fa-cart-plus me-2"></i> Taxes And Fees
+                        </li>
+                    </a>
+                    <a asp-action="Orders" asp-controller="Order"
+                        class="nav-item  d-@(permission.Count > 5 && permission[5].CanView == false ? "none" : "")">
+                        <li class="nav-item">
+                            <i class="fa-solid fa-users-rectangle me-2"></i> Orders
+                        </li>
+                    </a>
+                    <a asp-action="Customers" asp-controller="Customer"
+                        class="nav-item  d-@(permission.Count > 6 && permission[6].CanView == false ? "none" : "")">
+                        <li class="nav-item">
+                            <i class="fa-solid fa-users-rectangle me-2"></i> Customers
+                        </li>
+                    </a>
+                </ul>
+            </div>
+
+            <div class="col-lg-10 main-section p-0 bg-light">
+                <!-- navbar -->
+                <nav class="navbar navbar-expand-lg d-flex align-item-center py-0">
+                    <div class="my-0 nav-title">
+                        <div class="d-flex flex-row justify-content-center align-item-center fs-3">
+                            <img src="~/images/menu-bar.svg" alt="toggle-btn" class="mx-2" id="menu-icon"
+                                data-bs-toggle="offcanvas" data-bs-target="#sidebar"
+                                aria-controls="offcanvasWithBothOptions" />
+                            <img src="~/images/pizzashop_logo.png" alt="pizashop-logo"
+                                class="img-responsive pizza-logo" />
+                            <div class="brand-name-nav fs-5 mt-2"><b>PIZZASHOP</b></div>
+                        </div>
+                    </div>
+                    <div class="mx-5 r-0 d-flex align-items-center gap-3">
+                        @if (role == "2")
+                        {
+                            <div>
+                                <a asp-action="table" asp-controller="orderapptable"><i
+                                        class="fa-solid fa-mobile-screen-button fa-lg" style="color: white;"></i></a>
+                            </div>
+                        }
+                        <a class="nav-link profile" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <img src="~/images/Default_pfp.svg.png" class="profile-avatar rounded-circle" alt="avatar"
+                                width="44" height="44">
+                        </a>
+                        <ul class="dropdown-menu end-0">
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <img src="~/images/Default_pfp.svg.png" class="profile-avatar rounded-circle"
+                                        alt="avatar" width="26" height="26">
+                                    <samp id="userName"></samp>
+                                </a>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" asp-action="Profile" asp-controller="User"><i
+                                        class="fa fa-user-circle me-2" aria-hidden="true"></i>My Profile</a></li>
+                            <li><a class="dropdown-item" asp-action="ChangePassword" asp-controller="User">
+                                    <i class="fa-solid fa-rotate-right me-2"></i>Change Password</a>
+                            </li>
+                            <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#LogoutModel"><i
+                                        class="fa fa-sign-out me-2" aria-hidden="true"></i>Logout</a></li>
+                        </ul>
+                    </div>
+                </nav>
+                <!-- main content -->
+                <div class="px-4 content">
+                    <main role="main" class="">
+                        @RenderBody()
+                    </main>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Modal -->
+    <div class="modal fade" id="LogoutModel" tabindex="-1" aria-labelledby="LogoutModel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="LogoutModel">
+                        Logout Confirmation
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="d-flex justify-content-center align-item-center mt-5 mb-3">
+                    <i class="fa-solid fa-triangle-exclamation fa-2xl" style="color: #ffd43b"></i>
+                </div>
+                <div class="modal-body d-flex justify-content-center">
+                    Are you sure you want to logout?
+                </div>
+                <div class="modal-footer d-flex justify-content-center">
+                    <a href="@Url.Action("Logout", "Auth")">
+                        <button type="button" class="fill-btn px-3 py-2 border-0 rounded" data-bs-dismiss="modal">
+                            Yes
+                        </button>
+                    </a>
+                    <button type="button" class="btn btn-outline-secondary border-btn px-3" data-bs-dismiss="modal">
+                        No
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js" asp-append-version="true"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        $(function () {
+            var message = '@Html.Raw(TempData["ToastrMessage"])';
+            var type = '@Html.Raw(TempData["ToastrType"])';
+            if (message.trim() !== '') {
+                switch (type) {
+                    case 'success':
+                        toastr.success(message)
+                        break;
+                    case 'error':
+                        toastr.error(message)
+                        break;
+                    case 'warning':
+                        toastr.warning(message)
+                        break;
+                    case 'info':
+                        toastr.info(message)
+                }
+            }
+        });
+        $(document).ready(function () {
+            $.ajax({
+                url: '/User/GetProfileDetail',
+                method: 'GET',
+                success: function (data) {
+                    if (data.profileImage != null) {
+                        imgPath = "/images/" + data.profileImage;
+                        $('.profile-avatar').attr('src', imgPath);
+                    }
+                    $('#userName').html(data.userName)
+                },
+                error: function () {
+                    console.error('Failed to load profile photo.');
+                }
+            });
+        })
+        window.addEventListener("popstate", function () {
+            window.location.replace("/Auth/Login");
+        });
+    </script>
+</body>
+
+</html>
